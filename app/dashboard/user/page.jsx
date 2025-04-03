@@ -16,29 +16,25 @@ export default function UserDashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      router.push('/login');
+    const role = localStorage.getItem("role");
+
+    if (!token || role !== "user") {
+      router.push('/login'); // Redirect unauthorized users
       return;
     }
 
     const fetchData = async () => {
       try {
-        const userRes = await fetch("http://localhost:5000/api/user", {
+        const [userRes, ordersRes] = await Promise.all([
+          fetch("http://localhost:5000/api/user", {
           method: "GET",
           credentials: "include",
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        });
-
-        if (!userRes.ok) throw new Error("Failed to fetch user data");
-        const userData = await userRes.json();
-        setUser(userData);
-        setUsername(userData.username);
-        setEmail(userData.email);
-
-        const ordersRes = await fetch("http://localhost:5000/api/orders/user", {
+          }),
+          fetch("http://localhost:5000/api/orders/user", {
           method: "GET",
           credentials: "include",
           headers: {

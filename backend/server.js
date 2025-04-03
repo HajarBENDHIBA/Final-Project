@@ -14,14 +14,23 @@ import Order from "./models/Order.js";
 dotenv.config();
 const app = express();
 
-// CORS configuration
-const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS ? process.env.CORS_ALLOWED_ORIGINS.split(",") : ["http://localhost:3000"];
-app.use(cors({
+// Ensure required environment variables exist
+if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
+  console.error("❌ Missing required environment variables. Check your .env file.");
+  process.exit(1);
+}
+const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+  ? process.env.CORS_ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:3000"];
+
+app.use(
+  cors({
   origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
-}));
+  })
+);
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
