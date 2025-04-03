@@ -1,17 +1,13 @@
-// orderRoutes.js
-import express from "express";
-import { getOrders, createOrder, deleteOrder } from "../controllers/orderController.js";
-import { protect } from "../middleware/authMiddleware.js"; // Ensure this is imported
+import express from 'express';
+import { createOrder, getOrders } from '../controllers/orderController.js';
+import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Fetch all orders for a user
-router.get("/", protect, getOrders);
-
 // Create a new order
-router.post("/", protect, createOrder);
+router.post('/', verifyToken, createOrder);
 
-// Delete an order by ID
-router.delete("/:orderId", protect, deleteOrder);
+// Get user's orders
+router.get('/', verifyToken, getOrders);
 
-export default router;
+export default router; 

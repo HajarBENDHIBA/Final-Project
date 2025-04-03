@@ -1,19 +1,40 @@
-// models/Order.js
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },  // Link to the user who made the order
-  products: [{ 
-    productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-    quantity: { type: Number, required: true },
-  }],
-  totalPrice: { type: Number, required: true },
-  paymentDetails: { 
-    paymentMethod: { type: String, required: true },
-    paymentStatus: { type: String, required: true },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
-  orderStatus: { type: String, default: "Pending" },
-  createdAt: { type: Date, default: Date.now },
+  items: [{
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+    price: {
+      type: Number,
+      required: true
+    }
+  }],
+  total: {
+    type: Number,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'processing', 'completed', 'cancelled'],
+    default: 'pending'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
-export default mongoose.model("Order", orderSchema);
+export default mongoose.models.Order || mongoose.model('Order', orderSchema); 

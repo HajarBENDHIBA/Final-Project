@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { TrashIcon } from '@heroicons/react/24/outline';
+import StyledAlert from '@/app/components/StyledAlert';
+import axios from 'axios';
 
 export default function Cart() {
   const [cartItems, setCartItems] = useState([]);
+  const [alert, setAlert] = useState({ message: '', type: '', show: false });
 
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -24,67 +27,109 @@ export default function Cart() {
 
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity < 1) return;
-    const updatedCart = cartItems.map(item =>
-      item.id === id ? { ...item, quantity: newQuantity } : item
-    );
+    const updatedCart = cartItems.map(item => {
+      if (item._id === id) {
+        return { ...item, quantity: newQuantity };
+      }
+      return item;
+    });
     setCartItems(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
   };
 
   const getMaxQuantity = (id) => {
-    const item = cartItems.find(item => item.id === id);
+    const item = cartItems.find(item => item._id === id);
     return item ? item.stock : 10;
   };
 
   const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
 
-  const proceedToCheckout = async () => {
-    const token = localStorage.getItem("token");  // Get the user's token
-    if (!token) {
-      alert("Please log in to proceed with checkout.");
-      return;
-    }
-    if (isTokenExpired(token)) {
-      alert("Your session has expired. Please log in again.");
-      localStorage.removeItem("token");  // Remove expired token
-      window.location.href = "/login";  // Redirect to login page
-      return;
-    }
-  
-    const order = {
-      products: cartItems,
-      totalPrice: totalPrice,
-      paymentDetails: { /* Your payment details here */ },
-    };
-  
+  const showAlert = (message, type = 'info') => {
+    setAlert({ message, type, show: true });
+  };
+
+  const handleCheckout = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,  // Ensure the token is sent
-        },
-        body: JSON.stringify(order),
-        credentials: "include",
+      const response = await axios.get('http://localhost:5000/api/user', {
+        withCredentials: true
       });
-  
-      if (response.ok) {
-        localStorage.removeItem("cart");
-        setCartItems([]);
-        window.location.href = "/dashboard/user";
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || "Failed to place order. Try again.");
+
+      if (!response.data) {
+        showAlert("Please log in to proceed with checkout.", "warning");
+        return;
       }
+
+      // ... rest of the checkout logic ...
+
     } catch (error) {
-      console.error("Error placing order:", error);
-      alert("An error occurred while placing the order.");
+      if (error.response && error.response.status === 401) {
+        showAlert("Your session has expired. Please log in again.", "error");
+      } else {
+        console.error('Error during checkout:', error);
+        showAlert("An error occurred during checkout. Please try again.", "error");
+      }
     }
   };
-  
+
+  const handlePlaceOrder = async () => {
+    try {
+      // Check if user is logged in
+      const userResponse = await axios.get('http://localhost:5000/api/user', {
+        withCredentials: true
+      });
+
+      if (!userResponse.data) {
+        showAlert("Please log in to place an order.", "warning");
+        return;
+      }
+
+      // Prepare order data
+      const orderData = {
+        items: cartItems.map(item => ({
+          id: item._id,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      };
+
+      // Place the order
+      const response = await axios.post('http://localhost:5000/api/orders', orderData, {
+        withCredentials: true
+      });
+
+      if (response.data) {
+        // Clear the cart
+        setCartItems([]);
+        localStorage.removeItem('cart');
+        
+        showAlert("Order placed successfully!", "success");
+        
+        // Redirect to orders page or home page after a delay
+        setTimeout(() => {
+          window.location.href = '/dashboard/user';
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      if (error.response) {
+        const errorData = error.response.data;
+        showAlert(errorData.message || "Failed to place order. Try again.", "error");
+      } else {
+        showAlert("An error occurred while placing the order.", "error");
+      }
+    }
+  };
 
   return (
     <section className="p-8 bg-gray-50 min-h-screen">
+      {alert.show && (
+        <StyledAlert
+          message={alert.message}
+          type={alert.type}
+          onClose={() => setAlert({ ...alert, show: false })}
+        />
+      )}
       <h2 className="text-4xl font-extrabold text-center text-[#7FA15A] mb-8">🛒 Your Cart</h2>
       <p className="text-center text-lg text-[#7FA15A] mb-6">Manage your selected plants below</p>
 
@@ -108,20 +153,20 @@ export default function Cart() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-center space-x-4 ml-auto">
+              <div className="flex items-center space-x-4 ml-auto">
                 <button 
-                  onClick={() => updateQuantity(item.id, item.quantity - 1)} 
+                  onClick={() => updateQuantity(item._id, item.quantity - 1)} 
                   className="bg-[#7FA15A] text-white px-2 py-1 rounded-md hover:bg-[#607f4b]">
                   -
                 </button>
                 <span className="text-lg">{item.quantity}</span>
                 <button 
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)} 
+                  onClick={() => updateQuantity(item._id, item.quantity + 1)} 
                   className="bg-[#7FA15A] text-white px-2 py-1 rounded-md hover:bg-[#607f4b]">
                   +
                 </button>
 
-                <button onClick={() => removeFromCart(item.id)}>
+                <button onClick={() => removeFromCart(item._id)}>
                   <TrashIcon className="h-5 w-5 text-red-600 cursor-pointer hover:text-red-700" />
                 </button>
               </div>
@@ -131,7 +176,7 @@ export default function Cart() {
           <div className="flex items-center justify-between py-4">
             <p className="text-xl font-bold">Total: {totalPrice} DH</p>
             <button
-              onClick={proceedToCheckout}
+              onClick={handlePlaceOrder}
               className="bg-[#7FA15A] text-white py-2 px-6 rounded-md hover:bg-[#607f4b] transition-all">
               Proceed to Checkout
             </button>

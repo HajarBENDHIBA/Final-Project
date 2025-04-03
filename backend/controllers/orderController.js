@@ -1,69 +1,74 @@
-// orderController.js
-import Order from "../models/Order.js";
+import Order from '../models/Order.js';
+import Product from '../models/Product.js';
 
-// Get orders for the logged-in user
-const getOrders = async (req, res) => {
+export const createOrder = async (req, res) => {
   try {
-    const userId = req.user.id;  // Access the user ID from the token
+    const { items, total } = req.body;
+    const userId = req.user.id;
 
-    const orders = await Order.find({ user: userId }) // Find orders for the logged-in user
-      .populate("products.productId"); // Populate product details
-
-    if (!orders.length) {
-      return res.status(404).json({ message: "No orders found" });
+    // Validate items
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Invalid items in order' });
     }
 
-    res.json(orders); // Return orders to the client
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error", error });
-  }
-};
-
-// Create a new order
-const createOrder = async (req, res) => {
-  try {
-    const { products, totalPrice, paymentDetails } = req.body;
-
-    if (!products || !totalPrice || !paymentDetails) {
-      return res.status(400).json({ message: 'Products, total price, and payment details are required.' });
+    // Validate total
+    if (!total || isNaN(total) || total <= 0) {
+      return res.status(400).json({ message: 'Invalid total amount' });
     }
 
-    const newOrder = new Order({
-      user: req.user.id, // Associate the order with the logged-in user
-      products,
-      totalPrice,
-      paymentDetails,
+    // Create order items with product references
+    const orderItems = await Promise.all(items.map(async (item) => {
+      const product = await Product.findById(item.id);
+      if (!product) {
+        throw new Error(`Product not found: ${item.id}`);
+      }
+      return {
+        product: product._id,
+        quantity: item.quantity,
+        price: item.price
+      };
+    }));
+
+    // Create the order
+    const order = new Order({
+      user: userId,
+      items: orderItems,
+      total
     });
 
-    await newOrder.save();
+    await order.save();
 
-    res.status(201).json({ message: 'Order created successfully', order: newOrder });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Failed to create order' });
-  }
-};
+    // Clear the user's cart
+    res.clearCookie('cart');
 
-// Delete an order by ID (only if it belongs to the logged-in user)
-const deleteOrder = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.orderId);
-
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    if (order.user.toString() !== req.user.id) {  // Ensure the logged-in user is the owner
-      return res.status(403).json({ message: "Not authorized to delete this order" });
-    }
-
-    await order.deleteOne();
-    res.json({ message: "Order deleted successfully" });
+    res.status(201).json({
+      message: 'Order created successfully',
+      order: {
+        _id: order._id,
+        items: order.items,
+        total: order.total,
+        status: order.status,
+        createdAt: order.createdAt
+      }
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error", error });
+    console.error('Error creating order:', error);
+    res.status(500).json({ 
+      message: 'Error creating order',
+      error: error.message 
+    });
   }
 };
 
-export { getOrders, createOrder, deleteOrder };
+export const getOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user.id })
+      .populate('items.product')
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ message: 'Error fetching orders' });
+  }
+}; 

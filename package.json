@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@mantine/core": "^7.17.2",
+    "@mantine/hooks": "^7.17.2",
     "@next/font": "^14.2.15",
     "@tailwindcss/postcss": "^4.0.0",
     "@tailwindcss/typography": "^0.5.16",

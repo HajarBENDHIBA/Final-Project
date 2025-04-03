@@ -1,19 +1,15 @@
-// middleware/authMiddleware.js
-import jwt from 'jsonwebtoken'; // Import jwt for verifying the token
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-export const protect = (req, res, next) => {
-  const token = req.headers.authorization && req.headers.authorization.split(" ")[1];
+export const protect = async (req, res, next) => {
+    try {
+        const token = req.cookies.token;
+        if (!token) return res.status(401).json({ message: "Not authorized" });
 
-  if (!token) {
-    return res.status(401).json({ message: "No token, authorization denied" });
-  }
-
-  try {
-    // Verify JWT token (replace with your own JWT secret)
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); 
-    req.user = decoded.user; // Attach the decoded user to the request
-    next(); // Proceed to the next middleware or route handler
-  } catch (err) {
-    res.status(401).json({ message: "Token is not valid" });
-  }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = await User.findById(decoded.id).select("-password");
+        next();
+    } catch (error) {
+        res.status(401).json({ message: "Invalid token" });
+    }
 };
