@@ -157,5 +157,5 @@ export const updateProduct = async (req, res) => {
       error: error.message,
       stack: error.stack
     });
-  }
+    }
 };

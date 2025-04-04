@@ -1,62 +1,78 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FaUserCircle } from "react-icons/fa";
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { FaUserCircle } from 'react-icons/fa';
+import axios from 'axios';
 
-const Navbar = () => {
+export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState("");
+  const profileRef = useRef(null);
   const router = useRouter();
 
-  // Check login status when the component mounts
   useEffect(() => {
-    const userLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-    const role = localStorage.getItem("role") || ""; // Default to empty if null
-    setIsLoggedIn(userLoggedIn);
-    setUserRole(role);
+    const checkAuth = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/user', {
+          withCredentials: true
+        });
+        setIsLoggedIn(!!response.data);
+      } catch (error) {
+        setIsLoggedIn(false);
+      }
+    };
+
+    checkAuth();
   }, []);  
 
-  // Toggle mobile menu
-  const handleMenuToggle = () => setIsMenuOpen(!isMenuOpen);
-
-  // Toggle profile dropdown
-  const handleProfileToggle = () => setIsProfileOpen(!isProfileOpen);
-
-  // Login handler
-  const handleLogin = (role) => {
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("role", role); // Store actual role dynamically
-    setIsLoggedIn(true);
-    setUserRole(role);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
     setIsProfileOpen(false);
-    router.push("/account"); // Redirect to account page after login
-  };
-  
+      }
+    };
 
-  // Logout handler
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("role");
-    setIsLoggedIn(false);
-    setUserRole("");
-    setIsProfileOpen(false);
-    router.push("/");
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleMenuToggle = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
-  // Profile navigation
+  const handleProfileToggle = (e) => {
+    e.stopPropagation();
+    setIsProfileOpen(!isProfileOpen);
+  };
+
   const handleProfileClick = () => {
-    const storedRole = localStorage.getItem("role"); // Get the role from localStorage
+    router.push('/dashboard/user');
     setIsProfileOpen(false);
-  
-    if (storedRole === "admin") {
-      router.push("/dashboard/admin");
-    } else {
-      router.push("/dashboard/user");
-    }
+  };
+
+  const handleLogin = () => {
+    router.push('/account');
+    setIsProfileOpen(false);
+  };
+
+  const handleLogout = () => {
+    // Clear all local storage
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('role');
+    localStorage.removeItem('cart');
+    localStorage.removeItem('token');
+    
+    // Update states
+    setIsLoggedIn(false);
+    setIsProfileOpen(false);
+    
+    // Redirect to account page
+    router.push('/account');
   };
   
   return (
@@ -82,24 +98,36 @@ const Navbar = () => {
         </ul>
 
         {/* Profile Dropdown */}
-        <div className="relative">
-          <button onClick={handleProfileToggle} className="text-gray-700 text-3xl focus:outline-none">
+        <div className="relative" ref={profileRef}>
+          <button 
+            onClick={handleProfileToggle} 
+            className="text-gray-700 text-3xl focus:outline-none"
+          >
             <FaUserCircle />
           </button>
 
           {isProfileOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg">
+            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
               {isLoggedIn ? (
                 <>
-                  <button onClick={handleProfileClick} className="w-full text-left px-4 py-2 text-blue-600 hover:bg-gray-100">
+                  <button 
+                    onClick={handleProfileClick} 
+                    className="w-full text-left px-4 py-2 text-blue-600 hover:bg-gray-100"
+                  >
                     Profile
                   </button>
-                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">
+                  <button 
+                    onClick={handleLogout} 
+                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                  >
                     Logout
                   </button>
                 </>
               ) : (
-                <button onClick={handleLogin} className="w-full text-left px-4 py-2 text-blue-600 hover:bg-gray-100">
+                <button 
+                  onClick={handleLogin} 
+                  className="w-full text-left px-4 py-2 text-blue-600 hover:bg-gray-100"
+                >
                   Login
                 </button>
               )}
@@ -109,7 +137,5 @@ const Navbar = () => {
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}
 

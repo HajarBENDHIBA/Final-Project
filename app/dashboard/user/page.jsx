@@ -109,7 +109,7 @@ export default function UserDashboard() {
           password: ''
         });
         showAlert('Profile updated successfully!', 'success');
-        setEditMode(false);
+      setEditMode(false);
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -150,7 +150,7 @@ export default function UserDashboard() {
           {/* Profile Section */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-xl font-semibold mb-4">Profile Information</h3>
-            {!editMode ? (
+          {!editMode ? (
               <div className="space-y-2">
                 <p className="text-lg font-semibold text-gray-800">{user.username}</p>
                 <p className="text-gray-600">{user.email}</p>
@@ -158,15 +158,15 @@ export default function UserDashboard() {
                   onClick={() => setEditMode(true)}
                   className="mt-4 py-2 px-6 bg-[#7FA15A] text-white rounded-lg hover:bg-[#607f4b] transition-colors"
                 >
-                  Edit Profile
-                </button>
-              </div>
-            ) : (
+                Edit Profile
+              </button>
+            </div>
+          ) : (
               <form className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                  <input
-                    type="text"
+              <input
+                type="text"
                     name="username"
                     value={formData.username}
                     onChange={handleChange}
@@ -177,8 +177,8 @@ export default function UserDashboard() {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
+              <input
+                type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
@@ -189,8 +189,8 @@ export default function UserDashboard() {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">New Password (optional)</label>
-                  <input
-                    type="password"
+              <input
+                type="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
@@ -199,14 +199,14 @@ export default function UserDashboard() {
                   />
                 </div>
 
-                <div className="flex space-x-4">
+              <div className="flex space-x-4">
                   <button
                     onClick={handleUpdateProfile}
                     type="submit"
                     className="py-2 px-6 bg-[#7FA15A] text-white rounded-lg hover:bg-[#607f4b] transition-colors"
                   >
                     Save Changes
-                  </button>
+                </button>
                   <button
                     onClick={() => {
                       setEditMode(false);
@@ -219,11 +219,11 @@ export default function UserDashboard() {
                     type="button"
                     className="py-2 px-6 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors"
                   >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
           </div>
 
           {/* Orders Section */}
@@ -234,42 +234,38 @@ export default function UserDashboard() {
             ) : (
               <div className="space-y-4">
                 {orders.map((order) => (
-                  <div key={order._id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="font-semibold">Order #{order._id.slice(-6)}</p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-sm ${
-                        order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                  <div key={order._id} className="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold">Order #{order._id.slice(-6)}</h3>
+                      <span className={`px-3 py-1 rounded-full text-sm ${
                         order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                        'bg-red-100 text-red-800'
+                        order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
+                        'bg-green-100 text-green-800'
                       }`}>
                         {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </span>
                     </div>
-                    <div className="space-y-2">
-                      {order.items.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between text-sm">
-                          <div className="flex items-center space-x-3">
+                    <div className="space-y-4">
+                      {order.items.map((item) => (
+                        <div key={item._id} className="flex items-center space-x-4">
+                          {item.product && item.product.image && (
                             <img 
                               src={item.product.image} 
-                              alt={item.product.name}
-                              className="w-12 h-12 object-cover rounded-md"
+                              alt={item.product.name} 
+                              className="w-16 h-16 object-cover rounded"
                             />
-                            <span>{item.product.name}</span>
+                          )}
+                          <div className="flex-1">
+                            <h4 className="font-medium">{item.product?.name || 'Product Unavailable'}</h4>
+                            <p className="text-gray-600">Quantity: {item.quantity}</p>
+                            <p className="text-gray-600">Price: ${item.price}</p>
                           </div>
-                          <span>{item.quantity} x {item.price} DH</span>
                         </div>
                       ))}
                     </div>
-                    <div className="mt-2 pt-2 border-t">
-                      <p className="font-semibold text-right">
-                        Total: {order.total.toFixed(2)} DH
-                      </p>
+                    <div className="mt-4 pt-4 border-t">
+                      <p className="text-right font-semibold">Total: ${order.totalAmount}</p>
                     </div>
                   </div>
                 ))}
