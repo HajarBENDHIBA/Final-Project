@@ -10,28 +10,58 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const profileRef = useRef(null);
   const router = useRouter();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // First check localStorage for role and login state
+        const storedRole = localStorage.getItem('role');
+        const storedLoginState = localStorage.getItem('isLoggedIn');
+        
+        if (storedRole && storedLoginState === 'true') {
+          setUserRole(storedRole);
+          setIsLoggedIn(true);
+        }
+
+        // Then verify with server
         const response = await axios.get('http://localhost:5000/api/user', {
           withCredentials: true
         });
-        setIsLoggedIn(!!response.data);
+        
+        if (response.data) {
+          setIsLoggedIn(true);
+          // Ensure we're getting the role from the server response
+          const role = response.data.role || storedRole;
+          setUserRole(role);
+          localStorage.setItem('role', role);
+          localStorage.setItem('isLoggedIn', 'true');
+        } else {
+          setIsLoggedIn(false);
+          setUserRole(null);
+          localStorage.removeItem('role');
+          localStorage.removeItem('isLoggedIn');
+        }
       } catch (error) {
         setIsLoggedIn(false);
+        setUserRole(null);
+        localStorage.removeItem('role');
+        localStorage.removeItem('isLoggedIn');
       }
     };
 
     checkAuth();
-  }, []);  
+    // Check auth every 2 seconds
+    const interval = setInterval(checkAuth, 2000);
+    return () => clearInterval(interval);
+  }, [router.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
-    setIsProfileOpen(false);
+        setIsProfileOpen(false);
       }
     };
 
@@ -51,7 +81,17 @@ export default function Navbar() {
   };
 
   const handleProfileClick = () => {
-    router.push('/dashboard/user');
+    // Add console.log to debug the role
+    console.log('Current role:', userRole);
+    
+    if (userRole === 'admin') {
+      router.push('/dashboard/admin');
+    } else if (userRole === 'user') {
+      router.push('/dashboard/user');
+    } else {
+      // If no role is set, redirect to login
+      router.push('/account');
+    }
     setIsProfileOpen(false);
   };
 
@@ -60,19 +100,34 @@ export default function Navbar() {
     setIsProfileOpen(false);
   };
 
-  const handleLogout = () => {
-    // Clear all local storage
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('role');
-    localStorage.removeItem('cart');
-    localStorage.removeItem('token');
-    
-    // Update states
-    setIsLoggedIn(false);
-    setIsProfileOpen(false);
-    
-    // Redirect to account page
-    router.push('/account');
+  const handleLogout = async () => {
+    try {
+      // Call logout endpoint
+      await axios.post('http://localhost:5000/api/logout', {}, {
+        withCredentials: true
+      });
+      
+      // Clear all local storage
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('role');
+      localStorage.removeItem('cart');
+      localStorage.removeItem('token');
+      
+      // Update states
+      setIsLoggedIn(false);
+      setUserRole(null);
+      setIsProfileOpen(false);
+      
+      // Redirect to account page
+      router.push('/account');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still clear local state even if server request fails
+      setIsLoggedIn(false);
+      setUserRole(null);
+      setIsProfileOpen(false);
+      router.push('/account');
+    }
   };
   
   return (
@@ -114,7 +169,7 @@ export default function Navbar() {
                     onClick={handleProfileClick} 
                     className="w-full text-left px-4 py-2 text-blue-600 hover:bg-gray-100"
                   >
-                    Profile
+                    {userRole === 'admin' ? 'Admin Dashboard' : 'My Profile'}
                   </button>
                   <button 
                     onClick={handleLogout} 

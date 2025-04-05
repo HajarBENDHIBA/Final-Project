@@ -69,7 +69,7 @@ export default function Shop() {
             <img
               src={product.image}
               alt={product.name}
-              className="w-full h-64 object-cover transform hover:scale-110 transition duration-300"
+              className="w-full h-130 object-cover transform hover:scale-110 transition duration-300"
             />
             <div className="p-5">
               <h3 className="text-2xl font-semibold text-[#7FA15A] pb-2 mb-4">

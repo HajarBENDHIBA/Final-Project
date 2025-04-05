@@ -25,6 +25,11 @@ export default function ManageProducts() {
   }, []);
 
   const handleDelete = async (id) => {
+    // Add confirmation dialog
+    if (!window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      return;
+    }
+
     try {
       await axios.delete(`http://localhost:5000/api/products/${id}`);
       // Update the local state after successful deletion

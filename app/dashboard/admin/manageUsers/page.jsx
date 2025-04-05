@@ -31,6 +31,11 @@ export default function ManageUsers() {
   };
 
   const handleDeleteUser = async (id) => {
+    // Add confirmation dialog
+    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+
     try {
       const response = await axios.delete(`http://localhost:5000/api/users/${id}`, {
         withCredentials: true

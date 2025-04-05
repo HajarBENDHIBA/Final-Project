@@ -23,8 +23,16 @@ export default function Account() {
   
       const data = await response.json();
       if (response.ok) {
+        console.log('Login successful, role:', data.user.role);
+        
         localStorage.setItem("role", data.user.role);
-        router.push(data.user.role === "admin" ? "/dashboard/admin" : "/dashboard/user");
+        localStorage.setItem("isLoggedIn", "true");
+        
+        if (data.user.role === "admin") {
+          router.push("/dashboard/admin");
+        } else {
+          router.push("/dashboard/user");
+        }
       } else {
         setError(data.message);
       }
