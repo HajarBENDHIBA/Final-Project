@@ -138,6 +138,34 @@ export default function UserDashboard() {
       <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">User Dashboard</h2>
         
+        <div className="text-center mb-8">
+          <a
+            href={`https://wa.me/212762752337?text=${encodeURIComponent(`Hello! I would like to confirm my order from Green Heaven.
+
+Order Details:
+${orders.map(order => `
+Order #${order._id.slice(-6)}
+Items:
+${order.items.map(item => `- ${item.product?.name || 'Product Unavailable'} (${item.quantity}x) - ${item.price} DH`).join('\n')}
+Order Total: ${order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)} DH
+`).join('\n')}
+
+Customer Information:
+Name: ${user.username}
+Email: ${user.email}
+
+Thank you!`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-6 py-3 bg-[#25D366] text-white rounded-lg hover:bg-[#128C7E] transition-colors"
+          >
+            <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564c.173.087.287.129.332.202.045.073.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.029 18.88c-1.161 0-2.305-.292-3.318-.844l-3.677.964.984-3.595c-.607-1.052-.927-2.246-.926-3.468.001-3.825 3.113-6.937 6.937-6.937 1.856.001 3.598.723 4.907 2.034 1.31 1.311 2.031 3.054 2.03 4.908-.001 3.825-3.113 6.938-6.937 6.938z"/>
+            </svg>
+            Confirm Order on WhatsApp
+          </a>
+        </div>
+        
         {alert.show && (
           <StyledAlert
             message={alert.message}
@@ -232,44 +260,59 @@ export default function UserDashboard() {
             {orders.length === 0 ? (
               <p className="text-gray-600">You haven't placed any orders yet.</p>
             ) : (
-              <div className="space-y-4">
-                {orders.map((order) => (
-                  <div key={order._id} className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold">Order #{order._id.slice(-6)}</h3>
-                      <span className={`px-3 py-1 rounded-full text-sm ${
-                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                      </span>
-                    </div>
-                    <div className="space-y-4">
-                      {order.items.map((item) => (
-                        <div key={item._id} className="flex items-center space-x-4">
-                          {item.product && item.product.image && (
-                            <img 
-                              src={item.product.image} 
-                              alt={item.product.name} 
-                              className="w-16 h-16 object-cover rounded"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <h4 className="font-medium">{item.product?.name || 'Product Unavailable'}</h4>
-                            <p className="text-gray-600">Quantity: {item.quantity}</p>
-                            <p className="text-gray-600">Price: ${item.price}</p>
+              <>
+                <div className="bg-[#7FA15A] text-white p-4 rounded-lg mb-6">
+                  <h4 className="text-lg font-semibold mb-2">Order Summary</h4>
+                  <p className="text-xl">Total Orders: {orders.length}</p>
+                  <p className="text-2xl font-bold">Total Amount: {orders.reduce((sum, order) => {
+                    const orderTotal = order.items.reduce((itemSum, item) => {
+                      return itemSum + (item.price * item.quantity);
+                    }, 0);
+                    return sum + orderTotal;
+                  }, 0).toFixed(2)} DH</p>
+                </div>
+                <div className="space-y-4">
+                  {orders.map((order) => (
+                    <div key={order._id} className="bg-white rounded-lg shadow-md p-6 mb-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold">Order #{order._id.slice(-6)}</h3>
+                        <span className={`px-3 py-1 rounded-full text-sm ${
+                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                          order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                      </div>
+                      <div className="space-y-4">
+                        {order.items.map((item) => (
+                          <div key={item._id} className="flex items-center space-x-4">
+                            {item.product && item.product.image && (
+                              <img 
+                                src={item.product.image} 
+                                alt={item.product.name} 
+                                className="w-16 h-16 object-cover rounded"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <h4 className="font-medium">{item.product?.name || 'Product Unavailable'}</h4>
+                              <p className="text-gray-600">Quantity: {item.quantity}</p>
+                              <p className="text-gray-600">Price: {item.price} DH</p>
+                              <p className="text-gray-600">Subtotal: {(item.price * item.quantity).toFixed(2)} DH</p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                      <div className="mt-4 pt-4 border-t">
+                        <p className="text-right font-semibold text-lg">Order Total: {order.items.reduce((sum, item) => {
+                          return sum + (item.price * item.quantity);
+                        }, 0).toFixed(2)} DH</p>
+                      </div>
                     </div>
-                    <div className="mt-4 pt-4 border-t">
-                      <p className="text-right font-semibold">Total: ${order.totalAmount}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>
