@@ -69,13 +69,6 @@ export default function About() {
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-4xl font-bold text-[#7FA15A] mb-12">Meet Our Founder</h2>
           <div className="max-w-lg mx-auto bg-white shadow-lg rounded-lg p-6">
-            <Image
-              src="/logo.png"
-              alt="Hajar Bendhiba"
-              width={150}
-              height={150}
-              className="rounded-full mx-auto mb-4"
-            />
             <h3 className="text-2xl font-semibold">Hajar BENDHIBA</h3>
             <p className="text-green-600">Founder & Visionary</p>
             <p className="mt-4 text-gray-700">

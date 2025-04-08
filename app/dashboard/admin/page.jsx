@@ -54,62 +54,75 @@ export default function AdminDashboard() {
     if (!admin) return <p>Loading...</p>;
 
     return (
-        <section className="min-h-screen bg-gray-50 p-8 flex justify-center">
-            <div className="w-full max-w-2xl bg-white shadow-lg rounded-lg p-8 h-[500px]">
-                <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Admin Dashboard</h2>
-                {alert.show && (
-                    <StyledAlert
-                        message={alert.message}
-                        type={alert.type}
-                        onClose={() => setAlert({ ...alert, show: false })}
-                    />
-                )}
-                <div className="flex flex-col items-center mb-8">
-                    {!editing ? (
-                        <div className="text-center space-y-2">
-                            <p className="text-lg font-semibold text-gray-800">{admin.username}</p>
-                            <p className="text-gray-600">{admin.email}</p>
-                            <button onClick={() => setEditing(true)} className="mt-4 py-2 px-6 bg-green-600 text-white rounded-lg hover:bg-green-800">
-                                Edit Profile
-                            </button>
-                        </div>
-                    ) : (
-                        <form className="w-full space-y-4 border p-4 rounded-lg">
-                            <input
-                                type="text"
-                                name="username"
-                                value={formData.username}
-                                onChange={handleChange}
-                                className="w-full p-3 border border-gray-300 rounded-lg"
-                                placeholder="Username"
-                            />
-                            <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                className="w-full p-3 border border-gray-300 rounded-lg"
-                                placeholder="Email"
-                            />
-                            <input
-                                type="password"
-                                name="password"
-                                placeholder="New password (optional)"
-                                onChange={handleChange}
-                                className="w-full p-3 border border-gray-300 rounded-lg"
-                            />
-                            <div className="flex space-x-4">
-                                <button onClick={handleUpdate} type="button" className="py-2 px-6 bg-green-600 text-white rounded-lg hover:bg-green-800">
-                                    Save
-                                </button>
-                                <button onClick={() => setEditing(false)} type="button" className="py-2 px-6 bg-gray-400 text-white rounded-lg hover:bg-gray-600">
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
-                    )}
-                </div>
+        <section className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Admin Dashboard</h2>
+      
+          {alert.show && (
+            <StyledAlert
+              message={alert.message}
+              type={alert.type}
+              onClose={() => setAlert({ ...alert, show: false })}
+            />
+          )}
+      
+          {!editing ? (
+            <div className="bg-white shadow-md rounded-lg p-6 text-center space-y-4">
+                 <h3 className="text-xl font-semibold mb-4">Admin Profile</h3>
+              <p className="text-xl font-semibold text-gray-800">{admin.username}</p>
+              <p className="text-gray-600">{admin.email}</p>
+              <button
+                onClick={() => setEditing(true)}
+                className="inline-block mt-4 px-6 py-2 bg-[#7FA15A] text-white rounded-lg hover:bg-[#607f4b] transition-colors"
+              >
+                Edit Profile
+              </button>
             </div>
-        </section>
+          ) : (
+            <form className="bg-white shadow-md rounded-lg p-6 space-y-4">
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FA15A]"
+                placeholder="Username"
+              />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FA15A]"
+                placeholder="Email"
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="New password (optional)"
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FA15A]"
+              />
+              <div className="flex justify-between pt-4">
+                <button
+                  type="button"
+                  onClick={handleUpdate}
+                  className="px-6 py-2 bg-[#7FA15A] text-white rounded-lg hover:bg-green-800 transition-colors"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  className="px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </section>
+      
     );
 }

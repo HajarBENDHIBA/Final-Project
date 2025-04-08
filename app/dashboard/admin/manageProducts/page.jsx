@@ -2,11 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import StyledAlert from '@/app/components/StyledAlert';
 
 export default function ManageProducts() {
   const [productList, setProductList] = useState([]);
   const [newProduct, setNewProduct] = useState({ name: '', description: '', price: '', image: null });
   const [loading, setLoading] = useState(true);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [alert, setAlert] = useState({ message: '', type: '', show: false });
+
+  const showAlert = (message, type = 'info') => {
+    setAlert({ message, type, show: true });
+  };
 
   // Fetch products from the database
   const fetchProducts = async () => {
@@ -25,18 +33,73 @@ export default function ManageProducts() {
   }, []);
 
   const handleDelete = async (id) => {
-    // Add confirmation dialog
-    if (!window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
-      return;
+    if (window.confirm('Are you sure you want to delete this product?')) {
+      try {
+        await axios.delete(`http://localhost:5000/api/products/${id}`);
+        setProductList(productList.filter((product) => product._id !== id));
+        showAlert('Product deleted successfully!', 'success');
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        showAlert('Failed to delete product. Please try again.', 'error');
+      }
     }
+  };
+
+  const handleEdit = (product) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      image: product.image
+    });
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    if (!editingProduct) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/products/${id}`);
-      // Update the local state after successful deletion
-      setProductList(productList.filter((product) => product._id !== id));
+      const productData = {
+        name: newProduct.name.trim(),
+        description: newProduct.description.trim(),
+        price: parseFloat(newProduct.price)
+      };
+
+      if (newProduct.image !== editingProduct.image) {
+        productData.image = newProduct.image;
+      }
+
+      console.log('Updating product with data:', {
+        id: editingProduct._id,
+        ...productData
+      });
+
+      const response = await axios.put(
+        `http://localhost:5000/api/products/${editingProduct._id}`,
+        productData
+      );
+      
+      if (response.data) {
+        setProductList(productList.map(product => 
+          product._id === editingProduct._id ? response.data : product
+        ));
+
+        setEditingProduct(null);
+        setNewProduct({ name: '', description: '', price: '', image: null });
+        
+        showAlert('Product updated successfully!', 'success');
+      }
     } catch (error) {
-      console.error('Error deleting product:', error);
-      alert('Failed to delete product. Please try again.');
+      console.error('Error updating product:', error);
+      if (error.response) {
+        console.error('Server response:', error.response.data);
+        const errorMessage = error.response.data.message || 'Failed to update product';
+        showAlert(`Error: ${errorMessage}`, 'error');
+      } else {
+        showAlert('Failed to update product. Please try again.', 'error');
+      }
     }
   };
 
@@ -54,20 +117,7 @@ export default function ManageProducts() {
   const handleAddProduct = async (e) => {
     e.preventDefault();
 
-    // Validate price to ensure it's a positive number
-    if (isNaN(newProduct.price) || newProduct.price <= 0) {
-      alert('Please enter a valid price.');
-      return;
-    }
-
-    // Validate image
-    if (!newProduct.image) {
-      alert('Please select an image.');
-      return;
-    }
-
     try {
-      // Prepare the product data
       const productData = {
         name: newProduct.name.trim(),
         description: newProduct.description.trim(),
@@ -75,30 +125,21 @@ export default function ManageProducts() {
         image: newProduct.image
       };
 
-      // Make API call to add the product
       const response = await axios.post('http://localhost:5000/api/products', productData);
-
+      
       if (response.data) {
-        // Add the product to the list with the ID from the database
         setProductList([...productList, response.data]);
-
-    // Reset the form
         setNewProduct({ name: '', description: '', price: '', image: null });
-        
-        alert('Product added successfully!');
+        showAlert('Product added successfully!', 'success');
       }
     } catch (error) {
       console.error('Error adding product:', error);
       if (error.response) {
         console.error('Server response:', error.response.data);
-        const errorMessage = error.response.data.error || error.response.data.message || 'Unknown error';
-        alert(`Failed to add product: ${errorMessage}`);
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        alert('Failed to add product: No response from server. Please check if the server is running.');
+        const errorMessage = error.response.data.message || 'Failed to add product';
+        showAlert(`Error: ${errorMessage}`, 'error');
       } else {
-        console.error('Error setting up request:', error.message);
-        alert('Failed to add product: ' + error.message);
+        showAlert('Failed to add product. Please try again.', 'error');
       }
     }
   };
@@ -109,12 +150,21 @@ export default function ManageProducts() {
 
   return (
     <div className="p-8 bg-gray-100 min-h-screen">
+      {alert.show && (
+        <StyledAlert
+          message={alert.message}
+          type={alert.type}
+          onClose={() => setAlert({ ...alert, show: false })}
+        />
+      )}
       <h1 className="text-3xl font-bold text-[#7FA15A] mb-6">Manage Products</h1>
 
-      {/* Add Product Form */}
+      {/* Add/Edit Product Form */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-2xl font-semibold text-[#7FA15A] mb-4">Add New Product</h2>
-        <form onSubmit={handleAddProduct} className="space-y-4">
+        <h2 className="text-2xl font-semibold text-[#7FA15A] mb-4">
+          {editingProduct ? 'Edit Product' : 'Add New Product'}
+        </h2>
+        <form onSubmit={editingProduct ? handleUpdate : handleAddProduct} className="space-y-4">
           <input
             type="text"
             placeholder="Product Name"
@@ -143,8 +193,8 @@ export default function ManageProducts() {
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded"
-            required
+            className="w-full px-4 py-2 b order border-gray-300 rounded"
+            required={!editingProduct}
           />
           {newProduct.image && (
             <div className="mt-2">
@@ -155,12 +205,26 @@ export default function ManageProducts() {
               />
             </div>
           )}
-          <button
-            type="submit"
-            className="w-full bg-[#7FA15A] text-white py-2 rounded hover:bg-[#6a8c4f] transition"
-          >
-            Add Product
-          </button>
+          <div className="flex space-x-4">
+            <button
+              type="submit"
+              className="flex-1 bg-[#7FA15A] text-white py-2 rounded hover:bg-[#6a8c4f] transition"
+            >
+              {editingProduct ? 'Update Product' : 'Add Product'}
+            </button>
+            {editingProduct && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingProduct(null);
+                  setNewProduct({ name: '', description: '', price: '', image: null });
+                }}
+                className="flex-1 bg-gray-500 text-white py-2 rounded hover:bg-gray-600 transition"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
       </div>
 
@@ -186,12 +250,22 @@ export default function ManageProducts() {
                 <td className="py-3 px-6 text-sm text-gray-600">{product.description}</td>
                 <td className="py-3 px-6">{product.price} DH</td>
                 <td className="py-3 px-6">
-                  <button
-                    onClick={() => handleDelete(product._id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="p-2 text-blue-600 hover:text-blue-800 transition"
+                      title="Edit"
+                    >
+                      <PencilIcon className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product._id)}
+                      className="p-2 text-red-600 hover:text-red-800 transition"
+                      title="Delete"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

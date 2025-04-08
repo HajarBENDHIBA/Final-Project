@@ -95,6 +95,27 @@ export default function Shop() {
           </button>
         </Link>
       </div>
+
+      
+        {/* Call to Action */}
+       <section className="bg-gray-50 py-20">
+  <div className="container mx-auto px-6 text-center">
+    <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-8">
+      <h2 className="text-4xl font-bold text-[#7FA15A] mb-12">Learn More About Your Plant</h2>
+      <p className="text-gray-700 text-xl">
+        Want to know your plant better? Click below to discover fun facts, care tips, and everything you need to help your green buddy thrive!
+      </p>
+      <a
+        href="/blog"
+        className="mt-8 inline-block bg-[#7FA15A] text-white font-semibold text-lg px-8 py-4 rounded-full shadow-md hover:bg-[#6b944e] transition duration-300"
+      >
+        Visit Our Blog Page
+      </a>
+    </div>
+  </div>
+</section>
+
     </section>
+    
   );
 }
