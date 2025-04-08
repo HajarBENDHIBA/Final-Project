@@ -71,4 +71,26 @@ export const getOrders = async (req, res) => {
     console.error('Error fetching orders:', error);
     res.status(500).json({ message: 'Error fetching orders' });
   }
+};
+
+export const deleteOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Find the order and verify it belongs to the user
+    const order = await Order.findOne({ _id: id, user: userId });
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found or unauthorized' });
+    }
+
+    // Delete the order
+    await Order.findByIdAndDelete(id);
+
+    res.json({ message: 'Order deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    res.status(500).json({ message: 'Error deleting order' });
+  }
 }; 

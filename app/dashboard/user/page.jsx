@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import StyledAlert from '@/app/components/StyledAlert';
 import axios from 'axios';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 export default function UserDashboard() {
   const [user, setUser] = useState(null);
@@ -117,6 +118,31 @@ export default function UserDashboard() {
         showAlert(error.response.data.message, 'error');
       } else {
         showAlert('Failed to update profile. Please try again.', 'error');
+      }
+    }
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`http://localhost:5000/api/orders/${orderId}`, {
+        withCredentials: true
+      });
+      
+      if (response.data) {
+        // Update the orders list
+        setOrders(orders.filter(order => order._id !== orderId));
+        showAlert('Order deleted successfully!', 'success');
+      }
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      if (error.response?.status === 404) {
+        showAlert('Order not found or already deleted.', 'error');
+      } else {
+        showAlert('Failed to delete order. Please try again.', 'error');
       }
     }
   };
@@ -305,9 +331,18 @@ Thank you!`)}`}
                         ))}
                       </div>
                       <div className="mt-4 pt-4 border-t">
-                        <p className="text-right font-semibold text-lg">Order Total: {order.items.reduce((sum, item) => {
-                          return sum + (item.price * item.quantity);
-                        }, 0).toFixed(2)} DH</p>
+                        <div className="flex justify-between items-center">
+                          <p className="text-right font-semibold text-lg">Order Total: {order.items.reduce((sum, item) => {
+                            return sum + (item.price * item.quantity);
+                          }, 0).toFixed(2)} DH</p>
+                          <button
+                            onClick={() => handleDeleteOrder(order._id)}
+                            className="p-2 text-red-600 hover:text-red-800 transition"
+                            title="Delete Order"
+                          >
+                            <TrashIcon className="h-5 w-5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
