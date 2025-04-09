@@ -149,7 +149,7 @@ export default function ManageProducts() {
   }
 
   return (
-    <div className="p-8 bg-gray-100 min-h-screen">
+    <div className="p-8 bg-gray-50 min-h-screen">
       {alert.show && (
         <StyledAlert
           message={alert.message}
@@ -157,11 +157,11 @@ export default function ManageProducts() {
           onClose={() => setAlert({ ...alert, show: false })}
         />
       )}
-      <h1 className="text-3xl font-bold text-[#7FA15A] mb-6">Manage Products</h1>
+      <h1 className="text-4xl font-extrabold text-center text-[#7FA15A] mb-12">Manage Products</h1>
 
       {/* Add/Edit Product Form */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-2xl font-semibold text-[#7FA15A] mb-4">
+        <h2 className="text-2xl font-semibold text-[#7FA15A] mb-6 text-center">
           {editingProduct ? 'Edit Product' : 'Add New Product'}
         </h2>
         <form onSubmit={editingProduct ? handleUpdate : handleAddProduct} className="space-y-4">
@@ -229,7 +229,7 @@ export default function ManageProducts() {
       </div>
 
       {/* Product Table */}
-      <div className="bg-white shadow-md rounded-lg p-6 overflow-x-auto">
+      <div className="bg-white shadow-md rounded-lg p-6 overflow-x-auto mt-16">
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-[#7FA15A] text-white">
