@@ -1,10 +1,17 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import User from '../models/User.js';
 
 export const createOrder = async (req, res) => {
   try {
     const { items, total } = req.body;
     const userId = req.user.id;
+
+    // Get user's email
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
     // Validate items
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -24,6 +31,7 @@ export const createOrder = async (req, res) => {
       }
       return {
         product: product._id,
+        name: product.name,
         quantity: item.quantity,
         price: item.price
       };
@@ -32,6 +40,7 @@ export const createOrder = async (req, res) => {
     // Create the order
     const order = new Order({
       user: userId,
+      email: user.email,
       items: orderItems,
       total
     });
@@ -48,7 +57,8 @@ export const createOrder = async (req, res) => {
         items: order.items,
         total: order.total,
         status: order.status,
-        createdAt: order.createdAt
+        createdAt: order.createdAt,
+        email: order.email
       }
     });
   } catch (error) {
@@ -63,7 +73,10 @@ export const createOrder = async (req, res) => {
 export const getOrders = async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user.id })
-      .populate('items.product')
+      .populate({
+        path: 'items.product',
+        select: 'name price image'
+      })
       .sort({ createdAt: -1 });
 
     res.json(orders);
