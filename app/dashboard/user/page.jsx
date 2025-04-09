@@ -284,7 +284,10 @@ Thank you!`)}`}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-xl font-semibold mb-4">Your Orders</h3>
             {orders.length === 0 ? (
-              <p className="text-gray-600">You haven't placed any orders yet.</p>
+              <div className="flex flex-col items-center justify-center">
+                <img src="/empty-cart1.png" alt="No Orders" className="w-60 h-auto mb-4 opacity-80" />
+                <p className="text-gray-600">You haven't placed any orders yet.</p>
+              </div>
             ) : (
               <>
                 <div className="bg-[#7FA15A] text-white p-4 rounded-lg mb-6">

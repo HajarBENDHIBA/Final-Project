@@ -137,57 +137,60 @@ export default function Navbar() {
           <img src="/logo.png" alt="Green Heaven Logo" className="w-26 h-8 object-contain cursor-pointer" />
         </Link>
 
-        {/* Mobile Menu Button */}
-        <button className="md:hidden text-3xl text-[#7FA15A]" onClick={handleMenuToggle}>
-          {isMenuOpen ? "✖" : "☰"}
-        </button>
-
         {/* Navigation Links */}
         <ul className={`md:flex space-x-6 ${isMenuOpen ? "block absolute top-full left-0 w-full bg-gray-50 p-4 shadow-lg" : "hidden md:flex"}`}>
-          <li className="hover:text-[#7FA15A]"><Link href="/">Home</Link></li>
-          <li className="hover:text-[#7FA15A]"><Link href="/about">About Us</Link></li>
-          <li className="hover:text-[#7FA15A]"><Link href="/shop">Shop</Link></li>
-          <li className="hover:text-[#7FA15A]"><Link href="/blog">Blog</Link></li>
-          <li className="hover:text-[#7FA15A]"><Link href="/cart">Cart</Link></li>
-          <li className="hover:text-[#7FA15A]"><Link href="/contact">Contact Us</Link></li>
+          <li className="hover:text-[#7FA15A]" onClick={() => setIsMenuOpen(false)}><Link href="/">Home</Link></li>
+          <li className="hover:text-[#7FA15A]" onClick={() => setIsMenuOpen(false)}><Link href="/about">About Us</Link></li>
+          <li className="hover:text-[#7FA15A]" onClick={() => setIsMenuOpen(false)}><Link href="/shop">Shop</Link></li>
+          <li className="hover:text-[#7FA15A]" onClick={() => setIsMenuOpen(false)}><Link href="/blog">Blog</Link></li>
+          <li className="hover:text-[#7FA15A]" onClick={() => setIsMenuOpen(false)}><Link href="/cart">Cart</Link></li>
+          <li className="hover:text-[#7FA15A]" onClick={() => setIsMenuOpen(false)}><Link href="/contact">Contact Us</Link></li>
         </ul>
 
-        {/* Profile Dropdown */}
-        <div className="relative" ref={profileRef}>
-          <button 
-            onClick={handleProfileToggle} 
-            className="text-gray-700 text-3xl focus:outline-none"
-          >
-            <FaUserCircle />
+        {/* Profile and Menu Toggle */}
+        <div className="flex items-center space-x-4">
+          {/* Mobile Menu Button */}
+          <button className="md:hidden text-3xl text-[#7FA15A]" onClick={handleMenuToggle}>
+            {isMenuOpen ? "✖" : "☰"}
           </button>
 
-          {isProfileOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-              {isLoggedIn ? (
-                <>
+          {/* Profile Dropdown */}
+          <div className="relative" ref={profileRef}>
+            <button 
+              onClick={handleProfileToggle} 
+              className="text-gray-700 text-3xl focus:outline-none"
+            >
+              <FaUserCircle />
+            </button>
+
+            {isProfileOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                {isLoggedIn ? (
+                  <>
+                    <button 
+                      onClick={handleProfileClick} 
+                      className="w-full text-left px-4 py-2 text-blue-600 hover:bg-gray-100"
+                    >
+                      {userRole === 'admin' ? 'Admin Dashboard' : 'My Profile'}
+                    </button>
+                    <button 
+                      onClick={handleLogout} 
+                      className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
                   <button 
-                    onClick={handleProfileClick} 
+                    onClick={handleLogin} 
                     className="w-full text-left px-4 py-2 text-blue-600 hover:bg-gray-100"
                   >
-                    {userRole === 'admin' ? 'Admin Dashboard' : 'My Profile'}
+                    Login
                   </button>
-                  <button 
-                    onClick={handleLogout} 
-                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <button 
-                  onClick={handleLogin} 
-                  className="w-full text-left px-4 py-2 text-blue-600 hover:bg-gray-100"
-                >
-                  Login
-                </button>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>
