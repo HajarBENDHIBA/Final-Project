@@ -20,7 +20,7 @@ export default function Cart() {
   }, []);
 
   const removeFromCart = (id) => {
-    const updatedCart = cartItems.filter(item => item.id !== id);
+    const updatedCart = cartItems.filter(item => item._id !== id);
     setCartItems(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
   };
