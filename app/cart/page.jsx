@@ -83,6 +83,12 @@ export default function Cart() {
         return;
       }
 
+      // Check if user is an admin
+      if (userResponse.data.role === 'admin') {
+        showAlert("Admins are not allowed to place orders.", "error");
+        return;
+      }
+
       // Prepare order data
       const orderData = {
         items: cartItems.map(item => ({

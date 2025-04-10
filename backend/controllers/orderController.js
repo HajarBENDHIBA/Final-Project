@@ -4,11 +4,15 @@ import User from '../models/User.js';
 
 export const createOrder = async (req, res) => {
   try {
+    // Check if user is an admin
+    const user = await User.findById(req.user.id);
+    if (user.role === 'admin') {
+      return res.status(403).json({ message: 'Admins are not allowed to place orders' });
+    }
+
     const { items, total } = req.body;
     const userId = req.user.id;
 
-    // Get user's email
-    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
