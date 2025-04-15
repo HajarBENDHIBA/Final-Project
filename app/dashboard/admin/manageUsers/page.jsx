@@ -62,7 +62,7 @@ export default function ManageUsers() {
   return (
     <section className="p-8 bg-gray-50 min-h-screen">
       <h2 className="text-4xl font-extrabold text-center text-[#7FA15A] mb-8">👤 Manage Users</h2>
-      <p className="text-center text-lg text-[#7FA15A] mb-6">Manage your platform users below</p>
+      <p className="text-center text-xl text-[#7FA15A] mb-6">Manage your platform users below</p>
 
       {alert.show && (
         <StyledAlert

@@ -81,16 +81,15 @@ export default function About() {
 
       {/* Call to Action */}
       <section className="bg-[#7FA15A] text-white py-16 text-center">
-        <h2 className="text-4xl font-bold">Join Our Green Community!</h2>
+        <h2 className="text-4xl font-bold">Join Our Green Shop!</h2>
         <p className="text-lg mt-4 max-w-2xl mx-auto">
-          Discover the best plants for your home and learn how to take care of them.
-          Connect with other plant lovers today.
+        Find the perfect plants for your space and bring nature into your home. Start your green journey with us today.
         </p>
         <a
           href="/shop"
           className="mt-6 inline-block bg-white text-[#7FA15A] font-semibold px-6 py-3 rounded-full shadow-lg hover:bg-gray-200 transition"
         >
-          Visit Our Shop
+         Shop Now
         </a>
       </section>
     </div>

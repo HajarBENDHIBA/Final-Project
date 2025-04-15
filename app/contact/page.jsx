@@ -46,8 +46,8 @@ export default function Contact() {
         <h2 className="text-4xl font-extrabold text-center text-[#7FA15A] mb-6">
           Contact Us
         </h2>
-        <p className="text-center font-josefin-slab text-lg text-gray-600 mb-8">
-          We'd love to hear from you! Please fill out the form below.
+        <p className="text-center font-josefin-slab text-xl text-gray-600 mb-8">
+        We’d love to hear from you! Use the form below to get in touch.
         </p>
 
         <div className="flex flex-col md:flex-row space-y-8 md:space-y-0 md:space-x-8">
@@ -95,8 +95,8 @@ export default function Contact() {
               </div>
 
               <div>
-                <button className="w-full p-4 bg-[#7FA15A] text-white rounded-lg hover:bg-green-700">
-                  Submit
+                <button className="w-full p-4 bg-[#7FA15A] text-white rounded-lg hover:bg-green-900">
+                Contact Us
                 </button>
               </div>
             </form>

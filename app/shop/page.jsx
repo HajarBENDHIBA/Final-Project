@@ -58,7 +58,7 @@ export default function Shop() {
   return (
     <section className="p-8 bg-gray-50 min-h-screen">
       <h2 className="text-4xl font-extrabold text-center text-[#7FA15A] mb-8">🌿 Our Shop</h2>
-      <p className="text-center text-lg text-[#7FA15A] mb-10">Find the perfect plant for your home or office!</p>
+      <p className="text-center text-xl text-[#7FA15A] mb-10">Find the perfect plant for your home or office!</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
         {products.map((product) => (
@@ -101,15 +101,15 @@ export default function Shop() {
        <section className="bg-gray-50 py-20">
   <div className="container mx-auto px-6 text-center">
     <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-8">
-      <h2 className="text-4xl font-bold text-[#7FA15A] mb-12">Learn More About Your Plant</h2>
+      <h2 className="text-4xl font-bold text-[#7FA15A] mb-12">Get to Know Your Plant</h2>
       <p className="text-gray-700 text-xl">
-        Want to know your plant better? Click below to discover fun facts, care tips, and everything you need to help your green buddy thrive!
+      Curious about your leafy friend? Tap below to explore care tips, fun facts, and all you need to help your plant flourish!
       </p>
       <a
         href="/blog"
         className="mt-8 inline-block bg-[#7FA15A] text-white font-semibold text-lg px-8 py-4 rounded-full shadow-md hover:bg-[#6b944e] transition duration-300"
       >
-        Visit Our Blog Page
+        Explore Our Blog
       </a>
     </div>
   </div>

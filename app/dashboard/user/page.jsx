@@ -259,7 +259,7 @@ Thank you!`)}`}
                     type="submit"
                     className="py-2 px-6 bg-[#7FA15A] text-white rounded-lg hover:bg-[#607f4b] transition-colors"
                   >
-                    Save Changes
+                    Save
                 </button>
                   <button
                     onClick={() => {

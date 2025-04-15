@@ -52,7 +52,7 @@ const verifyToken = (req, res, next) => {
   const token = req.cookies.token || (req.headers["authorization"]?.split(" ")[1] ?? null);
 
   if (!token) {
-    return res.status(401).json({ message: "Access denied. No token provided." });
+    return res.status(401).json({ message: "Please log in to place an order." });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {

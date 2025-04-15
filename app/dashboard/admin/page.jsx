@@ -103,7 +103,7 @@ export default function AdminDashboard() {
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FA15A]"
               />
-              <div className="flex justify-between pt-4">
+              <div className="flex space-x-4">
                 <button
                   type="button"
                   onClick={handleUpdate}

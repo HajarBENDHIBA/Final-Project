@@ -137,14 +137,14 @@ export default function Cart() {
         />
       )}
       <h2 className="text-4xl font-extrabold text-center text-[#7FA15A] mb-8">🛒 Your Cart</h2>
-      <p className="text-center text-lg text-[#7FA15A] mb-6">Manage your selected plants below</p>
+      <p className="text-center text-xl text-[#7FA15A] mb-6">Manage your selected plants below</p>
 
       {cartItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center">
           <img src="/empty-cart1.png" alt="Empty Cart" className="w-60 h-auto mb-4 opacity-80" />
-          <p className="text-center text-gray-600 text-lg">
+          <p className="text-center text-gray-600 text-xl mt-8">
             Your cart is empty. 
-            <Link href="/shop" className="text-[#7FA15A] underline ml-1">Continue Shopping</Link>
+            <Link href="/shop" className="text-[#7FA15A] underline ml-2">Continue Shopping</Link>
           </p>
         </div>
       ) : (
@@ -184,7 +184,7 @@ export default function Cart() {
             <button
               onClick={handlePlaceOrder}
               className="bg-[#7FA15A] text-white py-2 px-6 rounded-md hover:bg-[#607f4b] transition-all">
-              Proceed to Checkout
+              Proceed To Checkout
             </button>
           </div>
         </div>
