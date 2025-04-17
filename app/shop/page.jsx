@@ -12,7 +12,7 @@ export default function Shop() {
   // Fetch products from the database
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('https://backend-green-heaven-93tp0klhj-hajar-bendhibas-projects.vercel.app/api/products');
+      const response = await axios.get('https://backend-green-heaven-git-main-hajar-bendhibas-projects.vercel.app/api/products');
       setProducts(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);
