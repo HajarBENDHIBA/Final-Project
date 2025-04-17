@@ -18,9 +18,15 @@ export default function Shop() {
       setError(null);
 
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/products`
+        `${process.env.NEXT_PUBLIC_API_URL}/products`
       );
-      setProducts(response.data);
+
+      if (response.data) {
+        setProducts(response.data);
+        return;
+      }
+
+      throw new Error("No data received from API");
     } catch (error) {
       console.error("Error fetching products:", error);
       setError("Failed to load products. Please try again later.");
