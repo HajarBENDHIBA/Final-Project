@@ -11,16 +11,6 @@ export default function Shop() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Function to get the correct image URL
-  const getImageUrl = (imagePath) => {
-    // If the image path is a full URL, use it as is
-    if (imagePath.startsWith("http")) {
-      return imagePath;
-    }
-    // Otherwise, construct the full URL using the backend URL
-    return `${process.env.NEXT_PUBLIC_API_URL}${imagePath}`;
-  };
-
   // Fetch products from the database
   const fetchProducts = async () => {
     try {
@@ -109,7 +99,7 @@ export default function Shop() {
             >
               <div className="relative w-full h-[300px]">
                 <img
-                  src={getImageUrl(product.image)}
+                  src={product.image}
                   alt={product.name}
                   className="w-full h-full object-cover transform hover:scale-110 transition duration-300"
                 />
