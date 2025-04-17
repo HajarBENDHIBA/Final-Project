@@ -22,7 +22,6 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
-    "Access-Control-Allow-Credentials": "true",
   },
   timeout: parseInt(process.env.NEXT_PUBLIC_TIMEOUT) || 60000,
 });
@@ -66,10 +65,6 @@ api.interceptors.request.use(
     if (!config.url.startsWith("/api/")) {
       config.url = "/api/" + config.url.replace(/^\/+/, "");
     }
-
-    // Add CORS headers for all requests
-    config.headers["Access-Control-Allow-Origin"] = "http://localhost:3000";
-    config.headers["Access-Control-Allow-Credentials"] = "true";
 
     // Log request for debugging
     console.log("Making request to:", {

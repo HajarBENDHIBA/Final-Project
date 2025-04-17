@@ -50,7 +50,7 @@ app.use(
       }
 
       console.log("Origin allowed:", origin);
-      return callback(null, origin);
+      return callback(null, true);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
@@ -186,10 +186,19 @@ const connectDB = async (retries = 5) => {
     const mongoOptions = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 30000,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 10000,
+      connectTimeoutMS: 5000,
+      maxPoolSize: 10,
+      minPoolSize: 1,
+      maxIdleTimeMS: 30000,
     };
+
+    // Check if we already have a connection
+    if (mongoose.connection.readyState === 1) {
+      console.log("✅ Already connected to MongoDB");
+      return;
+    }
 
     await mongoose.connect(process.env.MONGO_URI, mongoOptions);
     console.log("✅ Connected to MongoDB");
@@ -197,7 +206,7 @@ const connectDB = async (retries = 5) => {
     console.error("❌ MongoDB connection error:", error);
     if (retries > 0) {
       console.log(`Retrying connection... (${retries} attempts left)`);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return connectDB(retries - 1);
     }
     throw error;

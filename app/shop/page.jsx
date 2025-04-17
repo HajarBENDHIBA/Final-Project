@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function Shop() {
   const [products, setProducts] = useState([]);
@@ -12,10 +12,20 @@ export default function Shop() {
   // Fetch products from the database
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('https://backend-green-heaven-git-main-hajar-bendhibas-projects.vercel.app/api/products');
+      const response = await apiService.client.get("/products");
       setProducts(response.data);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error("Error fetching products:", error);
+
+      // Check if it's a timeout error
+      if (error.code === "ECONNABORTED" || error.response?.status === 504) {
+        console.log("Request timed out, using sample products");
+      } else {
+        console.log("API error, using sample products");
+      }
+
+      // Use sample products when API fails
+      setProducts(sampleProducts);
     } finally {
       setLoading(false);
     }
@@ -27,14 +37,14 @@ export default function Shop() {
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
+    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
     setCart(storedCart);
   }, []);
 
   // Save cart to localStorage whenever cart is updated
   useEffect(() => {
     if (cart.length > 0) {
-      localStorage.setItem('cart', JSON.stringify(cart));
+      localStorage.setItem("cart", JSON.stringify(cart));
     }
   }, [cart]);
 
@@ -43,7 +53,9 @@ export default function Shop() {
     const existingProduct = cart.find((item) => item._id === product._id);
     if (existingProduct) {
       const updatedCart = cart.map((item) =>
-        item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+        item._id === product._id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
       );
       setCart(updatedCart);
     } else {
@@ -57,8 +69,12 @@ export default function Shop() {
 
   return (
     <section className="p-8 bg-gray-50 min-h-screen">
-      <h2 className="text-4xl font-extrabold text-center text-[#7FA15A] mb-8">🌿 Our Shop</h2>
-      <p className="text-center text-xl text-[#7FA15A] mb-10">Find the perfect plant for your home or office!</p>
+      <h2 className="text-4xl font-extrabold text-center text-[#7FA15A] mb-8">
+        🌿 Our Shop
+      </h2>
+      <p className="text-center text-xl text-[#7FA15A] mb-10">
+        Find the perfect plant for your home or office!
+      </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
         {products.map((product) => (
@@ -76,7 +92,9 @@ export default function Shop() {
                 {product.name}
               </h3>
               <p className="text-gray-600 mt-2">{product.description}</p>
-              <p className="text-[#82BE5A] font-bold mt-3">{product.price} DH</p>
+              <p className="text-[#82BE5A] font-bold mt-3">
+                {product.price} DH
+              </p>
               <button
                 onClick={() => addToCart(product)}
                 className="mt-4 w-full bg-[#7FA15A] text-white py-2 rounded-lg hover:bg-green-900 transition"
@@ -96,26 +114,26 @@ export default function Shop() {
         </Link>
       </div>
 
-      
-        {/* Call to Action */}
-       <section className="bg-gray-50 py-20">
-  <div className="container mx-auto px-6 text-center">
-    <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-8">
-      <h2 className="text-4xl font-bold text-[#7FA15A] mb-12">Get to Know Your Plant</h2>
-      <p className="text-gray-700 text-xl">
-      Curious about your leafy friend? Tap below to explore care tips, fun facts, and all you need to help your plant flourish!
-      </p>
-      <a
-        href="/blog"
-        className="mt-8 inline-block bg-[#7FA15A] text-white font-semibold text-lg px-8 py-4 rounded-full shadow-md hover:bg-[#6b944e] transition duration-300"
-      >
-        Explore Our Blog
-      </a>
-    </div>
-  </div>
-</section>
-
+      {/* Call to Action */}
+      <section className="bg-gray-50 py-20">
+        <div className="container mx-auto px-6 text-center">
+          <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-8">
+            <h2 className="text-4xl font-bold text-[#7FA15A] mb-12">
+              Get to Know Your Plant
+            </h2>
+            <p className="text-gray-700 text-xl">
+              Curious about your leafy friend? Tap below to explore care tips,
+              fun facts, and all you need to help your plant flourish!
+            </p>
+            <a
+              href="/blog"
+              className="mt-8 inline-block bg-[#7FA15A] text-white font-semibold text-lg px-8 py-4 rounded-full shadow-md hover:bg-[#6b944e] transition duration-300"
+            >
+              Explore Our Blog
+            </a>
+          </div>
+        </div>
+      </section>
     </section>
-    
   );
 }

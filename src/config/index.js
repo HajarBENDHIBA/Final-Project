@@ -1,6 +1,6 @@
 const config = {
   api: {
-    baseURL: process.env.NEXT_PUBLIC_API_URL + "/api",
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
     timeout: 30000,
     retryCount: 3,
     retryDelay: 2000,
