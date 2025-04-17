@@ -4,7 +4,7 @@ import config from "../config";
 class ApiService {
   constructor() {
     this.client = axios.create({
-      baseURL: `${config.api.baseURL}/api`,
+      baseURL: config.api.baseURL,
       timeout: 8000,
       withCredentials: true,
       headers: {
@@ -96,7 +96,7 @@ class ApiService {
   // Auth methods with improved error handling
   async login(credentials) {
     try {
-      const response = await this.client.post("/login", credentials);
+      const response = await this.client.post("/api/login", credentials);
       return response.data;
     } catch (error) {
       throw this.formatError(error);
@@ -105,7 +105,7 @@ class ApiService {
 
   async signup(userData) {
     try {
-      const response = await this.client.post("/signup", userData);
+      const response = await this.client.post("/api/signup", userData);
       return response.data;
     } catch (error) {
       throw this.formatError(error);
@@ -114,7 +114,7 @@ class ApiService {
 
   async logout() {
     try {
-      await this.client.post("/logout");
+      await this.client.post("/api/logout");
       this.clearAuth();
     } catch (error) {
       this.clearAuth();
@@ -124,7 +124,7 @@ class ApiService {
 
   async checkAuth() {
     try {
-      const response = await this.client.get("/user");
+      const response = await this.client.get("/api/user");
       return response.data;
     } catch (error) {
       // Don't throw on 401 during auth check
