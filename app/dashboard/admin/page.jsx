@@ -15,7 +15,7 @@ export default function AdminDashboard() {
 
     const fetchAdmin = async () => {
         try {
-            const res = await fetch("http://localhost:5000/api/admin", { credentials: "include" });
+            const res = await fetch("https://backend-green-heaven.vercel.app/api/admin", { credentials: "include" });
             const data = await res.json();
             setAdmin(data);
             setFormData({ username: data.username, email: data.email, password: "" });
@@ -34,7 +34,7 @@ export default function AdminDashboard() {
 
     const handleUpdate = async () => {
         try {
-            const res = await fetch("http://localhost:5000/api/admin", {
+            const res = await fetch("https://backend-green-heaven.vercel.app/api/admin", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),

@@ -19,7 +19,7 @@ export default function ManageProducts() {
   // Fetch products from the database
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/products');
+      const response = await axios.get('https://backend-green-heaven.vercel.app/api/products');
       setProductList(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -35,7 +35,7 @@ export default function ManageProducts() {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/products/${id}`);
+        await axios.delete(`https://backend-green-heaven.vercel.app/api/products/${id}`);
         setProductList(productList.filter((product) => product._id !== id));
         showAlert('Product deleted successfully!', 'success');
       } catch (error) {
@@ -77,7 +77,7 @@ export default function ManageProducts() {
       });
 
       const response = await axios.put(
-        `http://localhost:5000/api/products/${editingProduct._id}`,
+        `https://backend-green-heaven.vercel.app/api/products/${editingProduct._id}`,
         productData
       );
       
@@ -125,7 +125,7 @@ export default function ManageProducts() {
         image: newProduct.image
       };
 
-      const response = await axios.post('http://localhost:5000/api/products', productData);
+      const response = await axios.post('https://backend-green-heaven.vercel.app/api/products', productData);
       
       if (response.data) {
         setProductList([...productList, response.data]);

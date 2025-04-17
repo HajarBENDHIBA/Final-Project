@@ -50,7 +50,7 @@ export default function Cart() {
 
   const handleCheckout = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/user', {
+      const response = await axios.get('https://backend-green-heaven.vercel.app/api/user', {
         withCredentials: true
       });
 
@@ -74,7 +74,7 @@ export default function Cart() {
   const handlePlaceOrder = async () => {
     try {
       // Check if user is logged in
-      const userResponse = await axios.get('http://localhost:5000/api/user', {
+      const userResponse = await axios.get('https://backend-green-heaven.vercel.app/api/user', {
         withCredentials: true
       });
 
@@ -100,7 +100,7 @@ export default function Cart() {
       };
 
       // Place the order
-      const response = await axios.post('http://localhost:5000/api/orders', orderData, {
+      const response = await axios.post('https://backend-green-heaven.vercel.app/api/orders', orderData, {
         withCredentials: true
       });
 

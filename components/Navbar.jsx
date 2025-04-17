@@ -27,7 +27,7 @@ export default function Navbar() {
         }
 
         // Then verify with server
-        const response = await axios.get('http://localhost:5000/api/user', {
+        const response = await axios.get('https://backend-green-heaven.vercel.app/api/user', {
           withCredentials: true
         });
         
@@ -103,7 +103,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       // Call logout endpoint
-      await axios.post('http://localhost:5000/api/logout', {}, {
+      await axios.post('https://backend-green-heaven.vercel.app/api/logout', {}, {
         withCredentials: true
       });
       

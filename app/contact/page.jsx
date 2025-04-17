@@ -19,7 +19,7 @@ export default function Contact() {
     setStatus("Sending...");
 
     try {
-      const response = await fetch("http://localhost:5000/api/contact/send", {
+      const response = await fetch("https://backend-green-heaven.vercel.app/api/contact/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

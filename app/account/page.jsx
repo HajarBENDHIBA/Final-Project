@@ -14,7 +14,7 @@ export default function Account() {
     e.preventDefault();
     setError(""); 
     try {
-      const response = await fetch("https://final-project-three-orcin.vercel.app/api/login", {
+      const response = await fetch("https://backend-green-heaven.vercel.app/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -45,7 +45,7 @@ export default function Account() {
     e.preventDefault();
     setError("");
     try {
-      const response = await fetch("https://final-project-three-orcin.vercel.app/api/signup", {
+      const response = await fetch("https://backend-green-heaven.vercel.app/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
