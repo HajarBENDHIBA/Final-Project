@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FaUserCircle } from 'react-icons/fa';
-import axios from 'axios';
+import api from '@/src/api/axios';  // Updated import path
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,46 +17,38 @@ export default function Navbar() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // First check localStorage for role and login state
-        const storedRole = localStorage.getItem('role');
-        const storedLoginState = localStorage.getItem('isLoggedIn');
-        
-        if (storedRole && storedLoginState === 'true') {
-          setUserRole(storedRole);
-          setIsLoggedIn(true);
+        // First check localStorage for token
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No token found');
         }
 
-        // Then verify with server
-        const response = await axios.get('https://backend-green-heaven.vercel.app/api/user', {
-          withCredentials: true
-        });
+        const response = await api.get('/user');
         
         if (response.data) {
           setIsLoggedIn(true);
-          // Ensure we're getting the role from the server response
-          const role = response.data.role || storedRole;
-          setUserRole(role);
-          localStorage.setItem('role', role);
+          setUserRole(response.data.role);
+          localStorage.setItem('role', response.data.role);
           localStorage.setItem('isLoggedIn', 'true');
-        } else {
-          setIsLoggedIn(false);
-          setUserRole(null);
-          localStorage.removeItem('role');
-          localStorage.removeItem('isLoggedIn');
         }
       } catch (error) {
+        console.log('Auth check failed:', error.message);
         setIsLoggedIn(false);
         setUserRole(null);
+        localStorage.removeItem('token');
         localStorage.removeItem('role');
         localStorage.removeItem('isLoggedIn');
       }
     };
 
+    // Initial check
     checkAuth();
-    // Check auth every 2 seconds
-    const interval = setInterval(checkAuth, 2000);
+    
+    // Set up interval for periodic checks
+    const interval = setInterval(checkAuth, 5000); // Changed to 5 seconds to reduce server load
+    
     return () => clearInterval(interval);
-  }, [router.pathname]);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -102,16 +94,10 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      // Call logout endpoint
-      await axios.post('https://backend-green-heaven.vercel.app/api/logout', {}, {
-        withCredentials: true
-      });
+      await api.post('/logout');
       
       // Clear all local storage
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('role');
-      localStorage.removeItem('cart');
-      localStorage.removeItem('token');
+      localStorage.clear();
       
       // Update states
       setIsLoggedIn(false);
@@ -123,6 +109,7 @@ export default function Navbar() {
     } catch (error) {
       console.error('Logout error:', error);
       // Still clear local state even if server request fails
+      localStorage.clear();
       setIsLoggedIn(false);
       setUserRole(null);
       setIsProfileOpen(false);

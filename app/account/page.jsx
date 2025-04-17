@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import api from '@/src/api/axios';  // Updated import path
 
 export default function Account() {
   const [isLogin, setIsLogin] = useState(true);
@@ -8,58 +9,55 @@ export default function Account() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
-  const router = useRouter(); 
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setError(""); 
+    setError("");
+    setIsLoading(true);
     try {
-      const response = await fetch("https://backend-green-heaven.vercel.app/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        credentials: "include", 
-      });
-  
-      const data = await response.json();
-      if (response.ok) {
-        console.log('Login successful, role:', data.user.role);
+      const response = await api.post('/login', { email, password });
+      
+      if (response.data) {
+        console.log('Login successful, role:', response.data.user.role);
         
-        localStorage.setItem("role", data.user.role);
+        // Token is automatically handled by axios interceptor
+        localStorage.setItem("role", response.data.user.role);
         localStorage.setItem("isLoggedIn", "true");
         
-        if (data.user.role === "admin") {
+        if (response.data.user.role === "admin") {
           router.push("/dashboard/admin");
         } else {
           router.push("/dashboard/user");
         }
-      } else {
-        setError(data.message);
       }
     } catch (error) {
-      setError("Something went wrong");
+      console.error('Login error:', error);
+      setError(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
     }
-  };  
+  };
 
   const handleSignUpSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
     try {
-      const response = await fetch("https://backend-green-heaven.vercel.app/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
-        credentials: "include",
-      });
-  
-      const data = await response.json();
-      if (response.ok) {
+      const response = await api.post('/signup', { username, email, password });
+      
+      if (response.data) {
         setIsLogin(true);
-      } else {
-        setError(data.message);
+        setEmail('');
+        setPassword('');
+        setUsername('');
       }
     } catch (error) {
-      setError("Something went wrong");
+      console.error('Signup error:', error);
+      setError(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -83,7 +81,11 @@ export default function Account() {
           </button>
         </div>
 
-        {error && <p className="text-red-500 text-center">{error}</p>}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
 
         {isLogin ? (
           <div className="space-y-6">
@@ -105,9 +107,12 @@ export default function Account() {
               />
               <button
                 type="submit"
-                className="w-full py-3 text-white bg-[#7FA15A] rounded-lg hover:bg-green-900 transition-all duration-300"
+                disabled={isLoading}
+                className={`w-full py-3 text-white ${
+                  isLoading ? 'bg-gray-400' : 'bg-[#7FA15A] hover:bg-green-900'
+                } rounded-lg transition-all duration-300`}
               >
-                Log In
+                {isLoading ? 'Loading...' : 'Log In'}
               </button>
             </form>
           </div>
@@ -138,9 +143,12 @@ export default function Account() {
               />
               <button
                 type="submit"
-                className="w-full py-3 text-white bg-[#7FA15A] rounded-lg hover:bg-green-900 transition-all duration-300"
+                disabled={isLoading}
+                className={`w-full py-3 text-white ${
+                  isLoading ? 'bg-gray-400' : 'bg-[#7FA15A] hover:bg-green-900'
+                } rounded-lg transition-all duration-300`}
               >
-                Sign Up
+                {isLoading ? 'Loading...' : 'Sign Up'}
               </button>
             </form>
           </div>

@@ -29,24 +29,25 @@ if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
   process.exit(1);
 }
 
-const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
-  ? process.env.CORS_ALLOWED_ORIGINS.split(",")
-  : ["http://localhost:3000"];
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+// CORS Configuration
+app.use(cors({
+    origin: ['http://localhost:3000', 'https://green-heaven.vercel.app'],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
+}));
+
+// Pre-flight requests
+app.options('*', cors());
+
+// Add headers before the routes are defined
+app.use(function (req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    next();
+});
 
 // Increase the limit for body-parser
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -129,29 +130,49 @@ app.put("/api/user/update", verifyToken, async (req, res) => {
   }
 });
 
-// Database Connection
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000, 
-  })
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => {
-    console.error("❌ MongoDB connection error:", err);
-    // Don't exit the process in serverless environment
-    if (process.env.NODE_ENV !== 'production') {
-      process.exit(1);
+// Database Connection with retry logic
+const connectDB = async (retries = 5) => {
+    try {
+        await mongoose.connect(process.env.MONGO_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000,
+        });
+        console.log("✅ Connected to MongoDB");
+    } catch (error) {
+        if (retries > 0) {
+            console.log(`❌ MongoDB connection failed. Retrying... (${retries} attempts left)`);
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+            return connectDB(retries - 1);
+        }
+        console.error("❌ MongoDB connection failed after all retries:", error);
+        throw error;
     }
-  });
+};
 
+// Connect to MongoDB
+connectDB();
+
+// Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong!" });
+    console.error(err.stack);
+    res.status(err.status || 500).json({
+        message: err.message || "Something went wrong!",
+        error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+});
+
+// Handle 404
+app.use((req, res) => {
+    res.status(404).json({ message: "Route not found" });
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
+
+// Only start the server if we're not in a serverless environment
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
+}
 
 // Export the Express API
 export default app;
