@@ -1,7 +1,10 @@
+import dotenv from "dotenv";
+// Load environment variables first
+dotenv.config();
+
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import contactRoutes from "./routes/contactRoutes.js";
@@ -16,7 +19,6 @@ import path from "path";
 import { fileURLToPath } from "url"; // Import this for ES module support
 import bcrypt from "bcryptjs";
 
-dotenv.config();
 const app = express();
 
 // Handle static files

@@ -5,7 +5,7 @@ class ApiService {
   constructor() {
     this.client = axios.create({
       baseURL: config.api.baseURL,
-      timeout: 8000,
+      timeout: 10000,
       withCredentials: true,
       headers: {
         "Content-Type": "application/json",
@@ -83,6 +83,7 @@ class ApiService {
       message = "The server is taking too long to respond. Please try again.";
     } else if (error.response?.status === 401) {
       message = "Please log in to continue.";
+      this.clearAuth();
     } else if (error.response?.data?.message) {
       message = error.response.data.message;
     }

@@ -19,9 +19,15 @@ export default function Navbar() {
     const checkAuth = async () => {
       try {
         const data = await apiService.checkAuth();
-        setIsLoggedIn(true);
-        setUserRole(data.role);
+        if (data) {
+          setIsLoggedIn(true);
+          setUserRole(data.role);
+        } else {
+          setIsLoggedIn(false);
+          setUserRole(null);
+        }
       } catch (error) {
+        console.error("Auth check error:", error);
         // User is not logged in - this is expected
         setIsLoggedIn(false);
         setUserRole(null);
@@ -29,7 +35,8 @@ export default function Navbar() {
     };
 
     checkAuth();
-    const interval = setInterval(checkAuth, 5000);
+    // Reduce the frequency of auth checks to avoid overwhelming the server
+    const interval = setInterval(checkAuth, 30000); // Check every 30 seconds instead of 5
     return () => clearInterval(interval);
   }, []);
 

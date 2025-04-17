@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import apiService from "@/src/services/api";
+import Image from "next/image";
 
 export default function Shop() {
   const [products, setProducts] = useState([]);
@@ -14,9 +14,13 @@ export default function Shop() {
   // Fetch products from the database
   const fetchProducts = async () => {
     try {
-      const response = await apiService.client.get("/api/products");
-      setProducts(response.data);
+      setLoading(true);
       setError(null);
+
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/products`
+      );
+      setProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
       setError("Failed to load products. Please try again later.");
@@ -61,20 +65,6 @@ export default function Shop() {
     return <div className="p-8 text-center">Loading products...</div>;
   }
 
-  if (error) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-red-500 mb-4">{error}</p>
-        <button
-          onClick={fetchProducts}
-          className="bg-[#7FA15A] text-white px-4 py-2 rounded hover:bg-green-900 transition"
-        >
-          Try Again
-        </button>
-      </div>
-    );
-  }
-
   return (
     <section className="p-8 bg-gray-50 min-h-screen">
       <h2 className="text-4xl font-extrabold text-center text-[#7FA15A] mb-8">
@@ -83,6 +73,18 @@ export default function Shop() {
       <p className="text-center text-xl text-[#7FA15A] mb-10">
         Find the perfect plant for your home or office!
       </p>
+
+      {error && (
+        <div className="text-center mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-700">{error}</p>
+          <button
+            onClick={fetchProducts}
+            className="mt-2 bg-[#7FA15A] text-white px-4 py-2 rounded hover:bg-green-900 transition"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
 
       {products.length === 0 ? (
         <div className="text-center">
@@ -95,11 +97,13 @@ export default function Shop() {
               key={product._id}
               className="bg-white shadow-lg rounded-lg overflow-hidden transform hover:scale-105 transition duration-300"
             >
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-130 object-cover transform hover:scale-110 transition duration-300"
-              />
+              <div className="relative w-full h-[300px]">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover transform hover:scale-110 transition duration-300"
+                />
+              </div>
               <div className="p-5">
                 <h3 className="text-2xl font-semibold text-[#7FA15A] pb-2 mb-4">
                   {product.name}
