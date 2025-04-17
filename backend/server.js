@@ -64,6 +64,11 @@ const verifyToken = (req, res, next) => {
   });
 };
 
+// Add a root route
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to Green Heaven API" });
+});
+
 // Routes
 app.use("/api/contact", contactRoutes);
 app.use("/api", authRoutes);
@@ -126,7 +131,13 @@ mongoose
     serverSelectionTimeoutMS: 5000, 
   })
   .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
+    // Don't exit the process in serverless environment
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
+  });
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
