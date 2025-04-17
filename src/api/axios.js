@@ -1,11 +1,21 @@
 import axios from 'axios';
 
+// Determine the base URL based on the environment
+const getBaseUrl = () => {
+    if (process.env.NEXT_PUBLIC_API_URL) {
+        return process.env.NEXT_PUBLIC_API_URL;
+    }
+    return 'https://backend-green-heaven.vercel.app/api';
+};
+
 const api = axios.create({
-    baseURL: 'https://backend-green-heaven.vercel.app/api',
+    baseURL: getBaseUrl(),
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
-    }
+        'Accept': 'application/json'
+    },
+    timeout: 10000 // 10 second timeout
 });
 
 // Request interceptor
@@ -61,6 +71,14 @@ api.interceptors.response.use(
             return Promise.reject({
                 ...error,
                 message: 'Request timed out. Please try again.'
+            });
+        }
+
+        // CORS errors
+        if (error.message?.includes('Network Error')) {
+            return Promise.reject({
+                ...error,
+                message: 'Unable to connect to the server. This might be a CORS issue.'
             });
         }
 

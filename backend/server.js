@@ -23,6 +23,13 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);  // Workaround for __dirname in ES module
 
+// Define allowed origins
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://green-heaven-final.vercel.app',
+    'https://green-heaven.vercel.app'
+];
+
 // Ensure required environment variables exist
 if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
   console.error("❌ Missing required environment variables. Check your .env file.");
@@ -31,21 +38,34 @@ if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
 
 // CORS Configuration
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://green-heaven.vercel.app'],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Set-Cookie']
 }));
 
 // Pre-flight requests
 app.options('*', cors());
 
-// Add headers before the routes are defined
-app.use(function (req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+// Add headers middleware
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     next();
 });
 
