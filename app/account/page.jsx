@@ -18,6 +18,15 @@ export default function Account() {
     setIsLoading(true);
     try {
       const data = await apiService.login({ email, password });
+      console.log("Login response:", data);
+
+      // Ensure role is stored in localStorage
+      if (data.user && data.user.role) {
+        localStorage.setItem("role", data.user.role);
+        localStorage.setItem("isLoggedIn", "true");
+        console.log("Stored role in localStorage:", data.user.role);
+      }
+
       if (data.user.role === "admin") {
         router.push("/dashboard/admin");
       } else {

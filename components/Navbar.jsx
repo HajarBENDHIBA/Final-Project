@@ -19,12 +19,25 @@ export default function Navbar() {
     const checkAuth = async () => {
       try {
         const data = await apiService.checkAuth();
+        console.log("Auth check response:", data);
         if (data) {
           setIsLoggedIn(true);
           setUserRole(data.role);
+          console.log("Setting user role to:", data.role);
         } else {
-          setIsLoggedIn(false);
-          setUserRole(null);
+          // Check localStorage as fallback
+          const storedRole = localStorage.getItem("role");
+          const storedIsLoggedIn = localStorage.getItem("isLoggedIn");
+
+          if (storedIsLoggedIn === "true" && storedRole) {
+            setIsLoggedIn(true);
+            setUserRole(storedRole);
+            console.log("Using stored role from localStorage:", storedRole);
+          } else {
+            setIsLoggedIn(false);
+            setUserRole(null);
+            console.log("No auth data found, clearing role");
+          }
         }
       } catch (error) {
         console.error("Auth check error:", error);
@@ -63,15 +76,26 @@ export default function Navbar() {
   };
 
   const handleProfileClick = () => {
-    // Add console.log to debug the role
-    console.log("Current role:", userRole);
+    console.log("Profile click - Current state:", {
+      isLoggedIn,
+      userRole,
+      localStorage: {
+        role: localStorage.getItem("role"),
+        isLoggedIn: localStorage.getItem("isLoggedIn"),
+      },
+    });
 
-    if (userRole === "admin") {
+    // Check both state and localStorage for role
+    const currentRole = userRole || localStorage.getItem("role");
+
+    if (currentRole === "admin") {
+      console.log("Redirecting to admin dashboard");
       router.push("/dashboard/admin");
-    } else if (userRole === "user") {
+    } else if (currentRole === "user") {
+      console.log("Redirecting to user dashboard");
       router.push("/dashboard/user");
     } else {
-      // If no role is set, redirect to login
+      console.log("No role found, redirecting to account");
       router.push("/account");
     }
     setIsProfileOpen(false);
