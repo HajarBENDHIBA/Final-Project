@@ -13,7 +13,7 @@ export default function ManageUsers() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch('https://backend-green-heaven.vercel.app/api/users'); // Adjust API endpoint if needed
+        const response = await fetch('https://backend-green-heaven-93tp0klhj-hajar-bendhibas-projects.vercel.app/api/users'); // Adjust API endpoint if needed
         const data = await response.json();
         setUsers(data);
         setLoading(false);
@@ -37,7 +37,7 @@ export default function ManageUsers() {
     }
 
     try {
-      const response = await axios.delete(`https://backend-green-heaven.vercel.app/api/users/${id}`, {
+      const response = await axios.delete(`https://backend-green-heaven-93tp0klhj-hajar-bendhibas-projects.vercel.app/api/users/${id}`, {
         withCredentials: true
       });
 

@@ -23,17 +23,33 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);  // Workaround for __dirname in ES module
 
-// CORS Configuration - More permissive for troubleshooting
-app.use(cors({
-    origin: true, // Allow all origins temporarily
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    exposedHeaders: ['Set-Cookie']
-}));
+// Define allowed origins explicitly
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://green-heaven-final.vercel.app',
+    'https://green-heaven.vercel.app'
+];
 
-// Enable pre-flight requests for all routes
-app.options('*', cors());
+// CORS Configuration
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    
+    next();
+});
+
+// Parse JSON bodies
+app.use(express.json());
 
 // Increase timeouts and limits
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -122,8 +138,9 @@ const connectDB = async (retries = 5) => {
         const mongoOptions = {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 10000, // Increase timeout to 10 seconds
-            socketTimeoutMS: 45000, // Increase socket timeout
+            serverSelectionTimeoutMS: 30000,
+            socketTimeoutMS: 45000,
+            connectTimeoutMS: 30000,
         };
 
         await mongoose.connect(process.env.MONGO_URI, mongoOptions);

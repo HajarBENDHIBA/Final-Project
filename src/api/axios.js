@@ -5,7 +5,7 @@ const getBaseUrl = () => {
     if (process.env.NEXT_PUBLIC_API_URL) {
         return process.env.NEXT_PUBLIC_API_URL;
     }
-    return 'https://backend-green-heaven.vercel.app/api';
+    return 'https://backend-green-heaven-93tp0klhj-hajar-bendhibas-projects.vercel.app/api';
 };
 
 // Create axios instance

@@ -45,36 +45,26 @@ class ApiService {
                 return response;
             },
             async (error) => {
-                // Try to retry the request if applicable
-                if (error.config && !error.config.__retryCount) {
-                    error.config.__retryCount = 0;
-                    return this.retryRequest(error);
+                const originalRequest = error.config;
+
+                // Don't retry if we've already retried or it's a 401
+                if (originalRequest._retry || error.response?.status === 401) {
+                    return Promise.reject(this.formatError(error));
                 }
 
-                this.handleError(error);
+                // Retry on network errors or 504s
+                if (error.code === 'ERR_NETWORK' || error.response?.status === 504) {
+                    originalRequest._retry = true;
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            resolve(this.client(originalRequest));
+                        }, 2000); // Wait 2 seconds before retrying
+                    });
+                }
+
                 return Promise.reject(this.formatError(error));
             }
         );
-    }
-
-    async retryRequest(error) {
-        const { config } = error;
-        config.__retryCount = config.__retryCount || 0;
-
-        if (config.__retryCount >= config.api.retryCount) {
-            return Promise.reject(error);
-        }
-
-        config.__retryCount += 1;
-        await new Promise(resolve => setTimeout(resolve, config.api.retryDelay));
-        
-        return this.client(config);
-    }
-
-    handleError(error) {
-        if (error.response?.status === 401) {
-            this.clearAuth();
-        }
     }
 
     clearAuth() {
@@ -86,10 +76,12 @@ class ApiService {
     formatError(error) {
         let message = 'An error occurred. Please try again.';
 
-        if (error.code === 'ECONNABORTED') {
-            message = 'Request timed out. Please try again.';
-        } else if (error.code === 'ERR_NETWORK') {
-            message = 'Network error. Please check your connection.';
+        if (error.code === 'ERR_NETWORK') {
+            message = 'Connection failed. Please check your internet connection and try again.';
+        } else if (error.response?.status === 504) {
+            message = 'The server is taking too long to respond. Please try again.';
+        } else if (error.response?.status === 401) {
+            message = 'Please log in to continue.';
         } else if (error.response?.data?.message) {
             message = error.response.data.message;
         }
@@ -100,7 +92,7 @@ class ApiService {
         };
     }
 
-    // Auth methods
+    // Auth methods with improved error handling
     async login(credentials) {
         try {
             const response = await this.client.post('/login', credentials);
@@ -124,7 +116,7 @@ class ApiService {
             await this.client.post('/logout');
             this.clearAuth();
         } catch (error) {
-            this.clearAuth(); // Clear auth even if request fails
+            this.clearAuth();
             throw this.formatError(error);
         }
     }
@@ -134,7 +126,11 @@ class ApiService {
             const response = await this.client.get('/user');
             return response.data;
         } catch (error) {
-            this.clearAuth();
+            // Don't throw on 401 during auth check
+            if (error.response?.status === 401) {
+                this.clearAuth();
+                return null;
+            }
             throw this.formatError(error);
         }
     }

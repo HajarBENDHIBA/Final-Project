@@ -27,7 +27,7 @@ export default function UserDashboard() {
     const fetchData = async () => {
       try {
         // Fetch user data
-        const userResponse = await axios.get('https://backend-green-heaven.vercel.app/api/user', {
+        const userResponse = await axios.get('https://backend-green-heaven-93tp0klhj-hajar-bendhibas-projects.vercel.app/api/user', {
           withCredentials: true
         });
         
@@ -41,7 +41,7 @@ export default function UserDashboard() {
         }
 
         // Fetch orders
-        const ordersResponse = await axios.get('https://backend-green-heaven.vercel.app/api/orders', {
+        const ordersResponse = await axios.get('https://backend-green-heaven-93tp0klhj-hajar-bendhibas-projects.vercel.app/api/orders', {
           withCredentials: true
         });
 
@@ -99,7 +99,7 @@ export default function UserDashboard() {
         updateData.password = formData.password.trim();
       }
 
-      const response = await axios.put('https://backend-green-heaven.vercel.app/api/user/update', updateData, {
+      const response = await axios.put('https://backend-green-heaven-93tp0klhj-hajar-bendhibas-projects.vercel.app/api/user/update', updateData, {
         withCredentials: true
       });
 
@@ -128,7 +128,7 @@ export default function UserDashboard() {
     }
 
     try {
-      const response = await axios.delete(`https://backend-green-heaven.vercel.app/api/orders/${orderId}`, {
+      const response = await axios.delete(`https://backend-green-heaven-93tp0klhj-hajar-bendhibas-projects.vercel.app/api/orders/${orderId}`, {
         withCredentials: true
       });
       
