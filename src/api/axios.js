@@ -2,10 +2,17 @@ import axios from "axios";
 
 // Determine the base URL based on the environment
 const getBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL + "/api";
-  }
-  return "https://backend-green-heaven.vercel.app/api";
+  // Debug environment variables
+  console.log("Environment Variables:", {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NODE_ENV: process.env.NODE_ENV,
+  });
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    "https://backend-green-heaven.vercel.app";
+  console.log("Using API Base URL:", baseUrl);
+  return baseUrl;
 };
 
 // Create axios instance
@@ -15,8 +22,17 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
+    "Access-Control-Allow-Credentials": "true",
   },
-  timeout: parseInt(process.env.NEXT_PUBLIC_TIMEOUT) || 30000,
+  timeout: parseInt(process.env.NEXT_PUBLIC_TIMEOUT) || 60000,
+});
+
+// Log initial configuration
+console.log("API Configuration:", {
+  baseURL: api.defaults.baseURL,
+  timeout: api.defaults.timeout,
+  withCredentials: api.defaults.withCredentials,
+  headers: api.defaults.headers,
 });
 
 // Retry logic
@@ -46,8 +62,22 @@ const retryRequest = async (error, retries = retryCount) => {
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Ensure URL starts with /api
+    if (!config.url.startsWith("/api/")) {
+      config.url = "/api/" + config.url.replace(/^\/+/, "");
+    }
+
+    // Add CORS headers for all requests
+    config.headers["Access-Control-Allow-Origin"] = "http://localhost:3000";
+    config.headers["Access-Control-Allow-Credentials"] = "true";
+
     // Log request for debugging
-    console.log("Making request to:", config.url);
+    console.log("Making request to:", {
+      url: config.url,
+      method: config.method,
+      headers: config.headers,
+      data: config.data,
+    });
 
     // Add token to request if it exists
     const token = localStorage.getItem("token");
@@ -66,7 +96,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     // Log successful response for debugging
-    console.log("Received response from:", response.config.url);
+    console.log("Received response:", {
+      url: response.config.url,
+      status: response.status,
+      data: response.data,
+    });
 
     // Handle successful responses
     if (response.data?.token) {
@@ -79,17 +113,33 @@ api.interceptors.response.use(
     return response;
   },
   async (error) => {
-    console.error("Response error:", {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
+    // Don't log 401s for /api/user as they're expected when not logged in
+    if (
+      !(
+        error.config.url.includes("/api/user") && error.response?.status === 401
+      )
+    ) {
+      console.error("Response error:", {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        data: error.response?.data,
+        headers: error.response?.headers,
+      });
+    }
 
-    // Try to retry the request if applicable
-    if (error.config && !error.config.__isRetry) {
+    // Try to retry the request if it's a network error or timeout
+    if (
+      error.config &&
+      !error.config.__isRetry &&
+      (error.code === "ECONNABORTED" ||
+        error.code === "ERR_NETWORK" ||
+        error.response?.status === 504)
+    ) {
       error.config.__isRetry = true;
-      return retryRequest(error);
+      return new Promise((resolve) => setTimeout(resolve, 2000)).then(() =>
+        api(error.config)
+      );
     }
 
     // Handle specific error cases
@@ -98,10 +148,12 @@ api.interceptors.response.use(
       localStorage.removeItem("token");
       localStorage.removeItem("role");
       localStorage.removeItem("isLoggedIn");
-      // Redirect to login if needed
+
+      // Only redirect to login if not already on login/signup page
       if (
         typeof window !== "undefined" &&
-        !window.location.pathname.includes("/login")
+        !window.location.pathname.includes("/login") &&
+        !window.location.pathname.includes("/signup")
       ) {
         window.location.href = "/login";
       }
@@ -125,4 +177,5 @@ api.interceptors.response.use(
   }
 );
 
+// Export the configured axios instance
 export default api;

@@ -28,21 +28,29 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://backend-green-heaven.vercel.app",
   "https://green-heaven-final.vercel.app",
+  "https://backend-green-heaven-git-main-hajar-bendhibas-projects.vercel.app",
 ];
 
 // CORS Configuration - Must be before other middleware
 app.use(
   cors({
     origin: function (origin, callback) {
+      console.log("Incoming request from origin:", origin);
+
       // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        console.log("No origin specified - allowing request");
+        return callback(null, true);
+      }
 
       if (allowedOrigins.indexOf(origin) === -1) {
         console.log("Origin not allowed:", origin);
-        return callback(null, false);
+        const msg = `CORS Error: The origin ${origin} is not allowed`;
+        return callback(new Error(msg), false);
       }
+
       console.log("Origin allowed:", origin);
-      return callback(null, true);
+      return callback(null, origin);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
@@ -56,6 +64,8 @@ app.use(
     ],
     exposedHeaders: ["Content-Length", "X-CSRF-Token"],
     maxAge: 86400, // 24 hours
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   })
 );
 
