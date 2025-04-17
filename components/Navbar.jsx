@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FaUserCircle } from 'react-icons/fa';
-import api from '@/src/api/axios';  // Updated import path
+import apiService from '@/src/services/api';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,36 +17,18 @@ export default function Navbar() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // First check localStorage for token
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No token found');
-        }
-
-        const response = await api.get('/user');
-        
-        if (response.data) {
-          setIsLoggedIn(true);
-          setUserRole(response.data.role);
-          localStorage.setItem('role', response.data.role);
-          localStorage.setItem('isLoggedIn', 'true');
-        }
+        const data = await apiService.checkAuth();
+        setIsLoggedIn(true);
+        setUserRole(data.role);
       } catch (error) {
-        console.log('Auth check failed:', error.message);
+        // User is not logged in - this is expected
         setIsLoggedIn(false);
         setUserRole(null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        localStorage.removeItem('isLoggedIn');
       }
     };
 
-    // Initial check
     checkAuth();
-    
-    // Set up interval for periodic checks
-    const interval = setInterval(checkAuth, 5000); // Changed to 5 seconds to reduce server load
-    
+    const interval = setInterval(checkAuth, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -94,22 +76,14 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await api.post('/logout');
-      
-      // Clear all local storage
-      localStorage.clear();
-      
-      // Update states
+      await apiService.logout();
       setIsLoggedIn(false);
       setUserRole(null);
       setIsProfileOpen(false);
-      
-      // Redirect to account page
       router.push('/account');
     } catch (error) {
       console.error('Logout error:', error);
-      // Still clear local state even if server request fails
-      localStorage.clear();
+      // Still clear state even if request fails
       setIsLoggedIn(false);
       setUserRole(null);
       setIsProfileOpen(false);

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/src/api/axios';  // Updated import path
+import apiService from '@/src/services/api';
 
 export default function Account() {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,24 +17,14 @@ export default function Account() {
     setError("");
     setIsLoading(true);
     try {
-      const response = await api.post('/login', { email, password });
-      
-      if (response.data) {
-        console.log('Login successful, role:', response.data.user.role);
-        
-        // Token is automatically handled by axios interceptor
-        localStorage.setItem("role", response.data.user.role);
-        localStorage.setItem("isLoggedIn", "true");
-        
-        if (response.data.user.role === "admin") {
-          router.push("/dashboard/admin");
-        } else {
-          router.push("/dashboard/user");
-        }
+      const data = await apiService.login({ email, password });
+      if (data.user.role === "admin") {
+        router.push("/dashboard/admin");
+      } else {
+        router.push("/dashboard/user");
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setError(error.response?.data?.message || "Something went wrong");
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -45,17 +35,13 @@ export default function Account() {
     setError("");
     setIsLoading(true);
     try {
-      const response = await api.post('/signup', { username, email, password });
-      
-      if (response.data) {
-        setIsLogin(true);
-        setEmail('');
-        setPassword('');
-        setUsername('');
-      }
+      await apiService.signup({ username, email, password });
+      setIsLogin(true);
+      setEmail('');
+      setPassword('');
+      setUsername('');
     } catch (error) {
-      console.error('Signup error:', error);
-      setError(error.response?.data?.message || "Something went wrong");
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
