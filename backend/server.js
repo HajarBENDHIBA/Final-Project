@@ -19,6 +19,13 @@ import bcrypt from "bcryptjs";
 dotenv.config();
 const app = express();
 
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log("Headers:", req.headers);
+  next();
+});
+
 // Handle static files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename); // Workaround for __dirname in ES module
@@ -26,62 +33,81 @@ const __dirname = path.dirname(__filename); // Workaround for __dirname in ES mo
 // Define allowed origins explicitly
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://green-heaven-final.vercel.app",
-  "https://green-heaven.vercel.app",
-  "https://backend-green-heaven-93tp0klhj-hajar-bendhiba.vercel.app",
+  "https://backend-green-heaven.vercel.app",
 ];
 
 // CORS Configuration
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log("Incoming request from origin:", origin);
 
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg =
-          "The CORS policy for this site does not allow access from the specified Origin.";
-        return callback(new Error(msg), false);
-      }
-      return callback(null, true);
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-    ],
-  })
-);
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    );
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-CSRF-Token"
+    );
+    res.header("Access-Control-Expose-Headers", "Content-Length, X-CSRF-Token");
 
-// Parse JSON bodies
-app.use(express.json());
+    // Debug log
+    console.log("CORS headers set for origin:", origin);
+  } else {
+    console.log("Origin not allowed:", origin);
+  }
 
-// Increase timeouts and limits
+  if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request");
+    res.header("Access-Control-Max-Age", "86400"); // 24 hours
+    return res.status(204).end();
+  }
+
+  next();
+});
+
+// Additional security headers
+app.use((req, res, next) => {
+  res.header("X-Content-Type-Options", "nosniff");
+  res.header("X-Frame-Options", "DENY");
+  res.header("X-XSS-Protection", "1; mode=block");
+  next();
+});
+
+// Parse JSON bodies with increased limits
+app.use(express.json({ limit: "50mb" }));
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
 
-// JWT Middleware to verify token
+// JWT Middleware to verify token with debugging
 const verifyToken = (req, res, next) => {
+  console.log("Verifying token...");
+  console.log("Cookies:", req.cookies);
+  console.log("Authorization header:", req.headers.authorization);
+
   const token =
-    req.cookies.token || (req.headers["authorization"]?.split(" ")[1] ?? null);
+    req.cookies.token || (req.headers.authorization?.split(" ")[1] ?? null);
 
   if (!token) {
+    console.log("No token found");
     return res
       .status(401)
-      .json({ message: "Please log in to place an order." });
+      .json({ message: "Please log in to access this resource." });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ message: "Invalid or expired token." });
-    }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Token verified successfully:", decoded);
     req.user = decoded;
     next();
-  });
+  } catch (error) {
+    console.error("Token verification failed:", error);
+    return res.status(403).json({ message: "Invalid or expired token." });
+  }
 };
 
 // Add a root route
