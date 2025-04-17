@@ -27,7 +27,8 @@ const __dirname = path.dirname(__filename);  // Workaround for __dirname in ES m
 const allowedOrigins = [
     'http://localhost:3000',
     'https://green-heaven-final.vercel.app',
-    'https://green-heaven.vercel.app'
+    'https://green-heaven.vercel.app',
+    'https://backend-green-heaven-93tp0klhj-hajar-bendhiba.vercel.app'
 ];
 
 // CORS Configuration
