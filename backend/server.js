@@ -23,53 +23,19 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);  // Workaround for __dirname in ES module
 
-// Define allowed origins
-const allowedOrigins = [
-    'http://localhost:3000',
-    'https://green-heaven-final.vercel.app',
-    'https://green-heaven.vercel.app'
-];
-
-// Ensure required environment variables exist
-if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
-  console.error("❌ Missing required environment variables. Check your .env file.");
-  process.exit(1);
-}
-
-// CORS Configuration
+// CORS Configuration - More permissive for troubleshooting
 app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
-        }
-        return callback(null, true);
-    },
+    origin: true, // Allow all origins temporarily
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
     exposedHeaders: ['Set-Cookie']
 }));
 
-// Pre-flight requests
+// Enable pre-flight requests for all routes
 app.options('*', cors());
 
-// Add headers middleware
-app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-    }
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    next();
-});
-
-// Increase the limit for body-parser
+// Increase timeouts and limits
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
@@ -150,32 +116,43 @@ app.put("/api/user/update", verifyToken, async (req, res) => {
   }
 });
 
-// Database Connection with retry logic
+// Database Connection with improved error handling
 const connectDB = async (retries = 5) => {
     try {
-        await mongoose.connect(process.env.MONGO_URI, {
+        const mongoOptions = {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000,
-        });
+            serverSelectionTimeoutMS: 10000, // Increase timeout to 10 seconds
+            socketTimeoutMS: 45000, // Increase socket timeout
+        };
+
+        await mongoose.connect(process.env.MONGO_URI, mongoOptions);
         console.log("✅ Connected to MongoDB");
     } catch (error) {
+        console.error("❌ MongoDB connection error:", error);
         if (retries > 0) {
-            console.log(`❌ MongoDB connection failed. Retrying... (${retries} attempts left)`);
-            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+            console.log(`Retrying connection... (${retries} attempts left)`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
             return connectDB(retries - 1);
         }
-        console.error("❌ MongoDB connection failed after all retries:", error);
         throw error;
     }
 };
 
 // Connect to MongoDB
-connectDB();
+connectDB().catch(console.error);
 
-// Error handling middleware
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'healthy',
+        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    });
+});
+
+// Global error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('Error:', err);
     res.status(err.status || 500).json({
         message: err.message || "Something went wrong!",
         error: process.env.NODE_ENV === 'development' ? err : {}
