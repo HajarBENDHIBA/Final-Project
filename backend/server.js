@@ -19,13 +19,6 @@ import bcrypt from "bcryptjs";
 dotenv.config();
 const app = express();
 
-// Debug middleware to log all requests
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  console.log("Headers:", req.headers);
-  next();
-});
-
 // Handle static files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename); // Workaround for __dirname in ES module
@@ -34,38 +27,42 @@ const __dirname = path.dirname(__filename); // Workaround for __dirname in ES mo
 const allowedOrigins = [
   "http://localhost:3000",
   "https://backend-green-heaven.vercel.app",
+  "https://green-heaven-final.vercel.app",
 ];
 
-// CORS Configuration
+// CORS Configuration - Must be before other middleware
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) === -1) {
+        console.log("Origin not allowed:", origin);
+        return callback(null, false);
+      }
+      console.log("Origin allowed:", origin);
+      return callback(null, true);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+      "X-CSRF-Token",
+    ],
+    exposedHeaders: ["Content-Length", "X-CSRF-Token"],
+    maxAge: 86400, // 24 hours
+  })
+);
+
+// Debug middleware to log all requests
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  console.log("Incoming request from origin:", origin);
-
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-    );
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-CSRF-Token"
-    );
-    res.header("Access-Control-Expose-Headers", "Content-Length, X-CSRF-Token");
-
-    // Debug log
-    console.log("CORS headers set for origin:", origin);
-  } else {
-    console.log("Origin not allowed:", origin);
-  }
-
-  if (req.method === "OPTIONS") {
-    console.log("Handling OPTIONS request");
-    res.header("Access-Control-Max-Age", "86400"); // 24 hours
-    return res.status(204).end();
-  }
-
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log("Headers:", req.headers);
   next();
 });
 
