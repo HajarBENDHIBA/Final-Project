@@ -180,41 +180,42 @@ app.put("/api/user/update", verifyToken, async (req, res) => {
   }
 });
 
-// Database Connection with improved error handling
-const connectDB = async (retries = 5) => {
+// Connect to MongoDB
+const connectDB = async () => {
   try {
-    const mongoOptions = {
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 10000,
-      connectTimeoutMS: 5000,
-      maxPoolSize: 10,
-      minPoolSize: 1,
-      maxIdleTimeMS: 30000,
-    };
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+    });
 
-    // Check if we already have a connection
-    if (mongoose.connection.readyState === 1) {
-      console.log("✅ Already connected to MongoDB");
-      return;
-    }
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
 
-    await mongoose.connect(process.env.MONGO_URI, mongoOptions);
-    console.log("✅ Connected to MongoDB");
+    // Handle connection errors
+    mongoose.connection.on("error", (err) => {
+      console.error("MongoDB connection error:", err);
+    });
+
+    // Handle disconnection
+    mongoose.connection.on("disconnected", () => {
+      console.log("MongoDB disconnected. Attempting to reconnect...");
+      setTimeout(connectDB, 5000); // Try to reconnect after 5 seconds
+    });
+
+    // Handle reconnection
+    mongoose.connection.on("reconnected", () => {
+      console.log("MongoDB reconnected");
+    });
   } catch (error) {
-    console.error("❌ MongoDB connection error:", error);
-    if (retries > 0) {
-      console.log(`Retrying connection... (${retries} attempts left)`);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return connectDB(retries - 1);
-    }
-    throw error;
+    console.error("Error connecting to MongoDB:", error);
+    // Retry connection after 5 seconds
+    setTimeout(connectDB, 5000);
   }
 };
 
-// Connect to MongoDB
-connectDB().catch(console.error);
+// Initial connection
+connectDB();
 
 // Health check endpoint
 app.get("/health", (req, res) => {
@@ -222,6 +223,7 @@ app.get("/health", (req, res) => {
     status: "healthy",
     mongodb:
       mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    timestamp: new Date().toISOString(),
   });
 });
 

@@ -1,9 +1,25 @@
 import Product from "../models/Product.js";
 import path from "path";
 
+// Simple in-memory cache
+let productsCache = null;
+let lastCacheTime = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 // Get all products
 export const getProducts = async (req, res) => {
   try {
+    // Check if we have cached data that's still valid
+    const now = Date.now();
+    if (
+      productsCache &&
+      lastCacheTime &&
+      now - lastCacheTime < CACHE_DURATION
+    ) {
+      console.log("Serving products from cache");
+      return res.json(productsCache);
+    }
+
     // Set a timeout for the database query
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error("Database query timed out")), 5000);
@@ -15,9 +31,20 @@ export const getProducts = async (req, res) => {
       timeoutPromise,
     ]);
 
+    // Update cache
+    productsCache = products;
+    lastCacheTime = now;
+
     res.json(products);
   } catch (error) {
     console.error("Error fetching products:", error);
+
+    // If we have cached data, return it even if it's expired
+    if (productsCache) {
+      console.log("Database error, serving stale cached data");
+      return res.json(productsCache);
+    }
+
     // If it's a timeout error, return a more specific message
     if (error.message === "Database query timed out") {
       return res.status(504).json({
@@ -79,6 +106,10 @@ export const addProduct = async (req, res) => {
     const savedProduct = await newProduct.save();
     console.log("Product saved successfully:", savedProduct);
 
+    // Invalidate cache when a new product is added
+    productsCache = null;
+    lastCacheTime = null;
+
     res.status(201).json(savedProduct);
   } catch (error) {
     console.error("Detailed error saving product:", error);
@@ -99,6 +130,11 @@ export const deleteProduct = async (req, res) => {
     if (!product) return res.status(404).json({ message: "Product not found" });
 
     await product.deleteOne();
+
+    // Invalidate cache when a product is deleted
+    productsCache = null;
+    lastCacheTime = null;
+
     res.json({ message: "Product deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -171,6 +207,10 @@ export const updateProduct = async (req, res) => {
       console.log("Failed to update product with ID:", id);
       return res.status(404).json({ message: "Product not found" });
     }
+
+    // Invalidate cache when a product is updated
+    productsCache = null;
+    lastCacheTime = null;
 
     console.log("Product updated successfully:", updatedProduct);
     res.json(updatedProduct);
