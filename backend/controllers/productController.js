@@ -5,6 +5,7 @@ import path from "path";
 let productsCache = null;
 let lastCacheTime = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const QUERY_TIMEOUT = 15000; // 15 seconds timeout
 
 // Get all products
 export const getProducts = async (req, res) => {
@@ -22,14 +23,21 @@ export const getProducts = async (req, res) => {
 
     // Set a timeout for the database query
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Database query timed out")), 5000);
+      setTimeout(() => reject(new Error("Database query timed out")), QUERY_TIMEOUT);
     });
 
+    console.log("Attempting to fetch products from database...");
+    
     // Race between the actual query and the timeout
     const products = await Promise.race([
-      Product.find().lean().limit(20), // Use lean() for better performance and limit results
+      Product.find()
+        .lean()
+        .limit(20)
+        .maxTimeMS(QUERY_TIMEOUT), // Add MongoDB native timeout
       timeoutPromise,
     ]);
+
+    console.log(`Successfully fetched ${products.length} products`);
 
     // Update cache
     productsCache = products;
@@ -37,7 +45,12 @@ export const getProducts = async (req, res) => {
 
     res.json(products);
   } catch (error) {
-    console.error("Error fetching products:", error);
+    console.error("Error fetching products:", {
+      error: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
 
     // If we have cached data, return it even if it's expired
     if (productsCache) {
@@ -46,13 +59,19 @@ export const getProducts = async (req, res) => {
     }
 
     // If it's a timeout error, return a more specific message
-    if (error.message === "Database query timed out") {
+    if (error.message === "Database query timed out" || error.name === "MongoTimeoutError") {
       return res.status(504).json({
-        message: "Request timed out. Please try again later.",
+        message: "The server is experiencing high load. Please try again in a few moments.",
         error: "GATEWAY_TIMEOUT",
+        retryAfter: 30 // Suggest retry after 30 seconds
       });
     }
-    res.status(500).json({ message: error.message });
+
+    res.status(500).json({ 
+      message: "An error occurred while fetching products",
+      error: error.message,
+      retryAfter: 60 // Suggest retry after 60 seconds for other errors
+    });
   }
 };
 

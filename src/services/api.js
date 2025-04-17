@@ -97,7 +97,7 @@ class ApiService {
   // Auth methods with improved error handling
   async login(credentials) {
     try {
-      const response = await this.client.post("/api/login", credentials);
+      const response = await this.client.post("/login", credentials);
       return response.data;
     } catch (error) {
       throw this.formatError(error);
@@ -106,7 +106,7 @@ class ApiService {
 
   async signup(userData) {
     try {
-      const response = await this.client.post("/api/signup", userData);
+      const response = await this.client.post("/signup", userData);
       return response.data;
     } catch (error) {
       throw this.formatError(error);
@@ -115,7 +115,7 @@ class ApiService {
 
   async logout() {
     try {
-      await this.client.post("/api/logout");
+      await this.client.post("/logout");
       this.clearAuth();
     } catch (error) {
       this.clearAuth();
@@ -125,7 +125,7 @@ class ApiService {
 
   async checkAuth() {
     try {
-      const response = await this.client.get("/api/user");
+      const response = await this.client.get("/user");
       return response.data;
     } catch (error) {
       // Don't throw on 401 during auth check

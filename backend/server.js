@@ -182,42 +182,46 @@ app.put("/api/user/update", verifyToken, async (req, res) => {
   }
 });
 
-// Connect to MongoDB
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+// MongoDB Connection
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    maxPoolSize: 10, // Maximum number of connections in the pool
+    minPoolSize: 2, // Minimum number of connections in the pool
+    serverSelectionTimeoutMS: 5000, // Timeout for server selection
+    socketTimeoutMS: 45000, // How long to wait for operations to complete
+    family: 4, // Use IPv4, skip trying IPv6
+  })
+  .then(() => {
+    console.log("Connected to MongoDB");
+    console.log(`MongoDB connection state: ${mongoose.connection.readyState}`);
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", {
+      error: err.message,
+      name: err.name,
+      code: err.code,
     });
+    process.exit(1);
+  });
 
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+// Monitor MongoDB connection events
+mongoose.connection.on("error", (err) => {
+  console.error("MongoDB error event:", {
+    error: err.message,
+    name: err.name,
+    code: err.code,
+  });
+});
 
-    // Handle connection errors
-    mongoose.connection.on("error", (err) => {
-      console.error("MongoDB connection error:", err);
-    });
+mongoose.connection.on("disconnected", () => {
+  console.log("MongoDB disconnected. Attempting to reconnect...");
+});
 
-    // Handle disconnection
-    mongoose.connection.on("disconnected", () => {
-      console.log("MongoDB disconnected. Attempting to reconnect...");
-      setTimeout(connectDB, 5000); // Try to reconnect after 5 seconds
-    });
-
-    // Handle reconnection
-    mongoose.connection.on("reconnected", () => {
-      console.log("MongoDB reconnected");
-    });
-  } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
-    // Retry connection after 5 seconds
-    setTimeout(connectDB, 5000);
-  }
-};
-
-// Initial connection
-connectDB();
+mongoose.connection.on("reconnected", () => {
+  console.log("MongoDB reconnected successfully");
+});
 
 // Health check endpoint
 app.get("/health", (req, res) => {
