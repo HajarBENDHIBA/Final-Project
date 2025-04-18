@@ -184,7 +184,7 @@ app.put("/api/user/update", verifyToken, async (req, res) => {
 
 // MongoDB Connection
 mongoose
-  .connect(process.env.MONGODB_URI, {
+  .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     maxPoolSize: 10, // Maximum number of connections in the pool

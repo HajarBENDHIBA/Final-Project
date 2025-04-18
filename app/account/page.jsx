@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import apiService from "@/src/services/api";
 
@@ -10,7 +10,32 @@ export default function Account() {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const router = useRouter();
+
+  // Check authentication status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        
+        if (token && role) {
+          if (role === 'admin') {
+            router.replace('/dashboard/admin');
+          } else {
+            router.replace('/dashboard/user');
+          }
+          return;
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+      } finally {
+        setIsPageLoading(false);
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -20,17 +45,19 @@ export default function Account() {
       const data = await apiService.login({ email, password });
       console.log("Login response:", data);
 
-      // Ensure role is stored in localStorage
       if (data.user && data.user.role) {
         localStorage.setItem("role", data.user.role);
         localStorage.setItem("isLoggedIn", "true");
         console.log("Stored role in localStorage:", data.user.role);
-      }
-
-      if (data.user.role === "admin") {
-        router.push("/dashboard/admin");
-      } else {
-        router.push("/dashboard/user");
+        
+        // Add a small delay before navigation
+        setTimeout(() => {
+          if (data.user.role === "admin") {
+            router.replace("/dashboard/admin");
+          } else {
+            router.replace("/dashboard/user");
+          }
+        }, 100);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -45,7 +72,13 @@ export default function Account() {
     setError("");
     setIsLoading(true);
     try {
-      await apiService.signup({ username, email, password });
+      const res = await apiService.signup({
+        username,
+        email,
+        password,
+      });
+
+      console.log("✅ Signup response:", res);
       setIsLogin(true);
       setEmail("");
       setPassword("");
@@ -58,6 +91,14 @@ export default function Account() {
       setIsLoading(false);
     }
   };
+
+  if (isPageLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#7FA15A]"></div>
+      </div>
+    );
+  }
 
   return (
     <section className="min-h-screen bg-gray-50 p-8">

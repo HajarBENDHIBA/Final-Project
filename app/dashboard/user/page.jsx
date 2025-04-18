@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import StyledAlert from "@/app/components/StyledAlert";
-import axios from "axios";
+import apiService from "@/src/services/api";
 import { TrashIcon } from "@heroicons/react/24/outline";
 
 export default function UserDashboard() {
@@ -24,40 +24,30 @@ export default function UserDashboard() {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const checkAuthAndFetchData = async () => {
       try {
-        // Fetch user data
-        const userResponse = await axios.get(
-          "https://backend-green-heaven-git-main-hajar-bendhibas-projects.vercel.app/api/user",
-          {
-            withCredentials: true,
-          }
-        );
-
-        if (userResponse.data) {
-          setUser(userResponse.data);
-          setFormData({
-            username: userResponse.data.username,
-            email: userResponse.data.email,
-            password: "",
-          });
+        const userData = await apiService.checkAuth();
+        if (!userData) {
+          router.replace('/account');
+          return;
         }
 
-        // Fetch orders
-        const ordersResponse = await axios.get(
-          "https://backend-green-heaven-git-main-hajar-bendhibas-projects.vercel.app/api/orders",
-          {
-            withCredentials: true,
-          }
-        );
+        setUser(userData);
+        setFormData({
+          username: userData.username,
+          email: userData.email,
+          password: "",
+        });
 
-        if (ordersResponse.data) {
-          setOrders(ordersResponse.data);
+        // Fetch orders using apiService
+        const response = await apiService.client.get("/api/orders");
+        if (response.data) {
+          setOrders(response.data);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
         if (error.response?.status === 401) {
-          router.push("/login");
+          router.replace('/account');
         } else {
           showAlert("Failed to load data. Please try again.", "error");
         }
@@ -66,7 +56,7 @@ export default function UserDashboard() {
       }
     };
 
-    fetchData();
+    checkAuthAndFetchData();
   }, [router]);
 
   const handleChange = (e) => {
@@ -105,13 +95,7 @@ export default function UserDashboard() {
         updateData.password = formData.password.trim();
       }
 
-      const response = await axios.put(
-        "https://backend-green-heaven-git-main-hajar-bendhibas-projects.vercel.app/api/user/update",
-        updateData,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await apiService.client.put("/api/user/update", updateData);
 
       if (response.data) {
         setUser(response.data);
@@ -142,12 +126,7 @@ export default function UserDashboard() {
     }
 
     try {
-      const response = await axios.delete(
-        `https://backend-green-heaven-git-main-hajar-bendhibas-projects.vercel.app/api/orders/${orderId}`,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await apiService.client.delete(`/api/orders/${orderId}`);
 
       if (response.data) {
         // Update the orders list

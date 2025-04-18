@@ -6,6 +6,7 @@ import api from './services/api';
 import AppRoutes from './routes';
 import Navbar from './components/Navbar';
 import LoadingSpinner from './components/LoadingSpinner';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -33,25 +34,27 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="app">
-        <Navbar isAuthenticated={isAuthenticated} onLogout={() => setIsAuthenticated(false)} />
-        <main className="main-content">
-          <AppRoutes isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
-        </main>
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="app">
+          <Navbar isAuthenticated={isAuthenticated} onLogout={() => setIsAuthenticated(false)} />
+          <main className="main-content">
+            <AppRoutes isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+          </main>
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

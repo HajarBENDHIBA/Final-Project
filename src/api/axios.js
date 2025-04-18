@@ -8,9 +8,12 @@ const getBaseUrl = () => {
     NODE_ENV: process.env.NODE_ENV,
   });
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_API_URL ||
-    "https://backend-green-heaven.vercel.app";
+  const isDev = process.env.NODE_ENV === "development";
+
+  const baseUrl = isDev
+    ? "http://localhost:5000"
+    : process.env.NEXT_PUBLIC_API_URL || "https://backend-green-heaven.vercel.app";
+  
   console.log("Using API Base URL:", baseUrl);
   return baseUrl;
 };
@@ -25,6 +28,7 @@ const api = axios.create({
   },
   timeout: parseInt(process.env.NEXT_PUBLIC_TIMEOUT) || 60000,
 });
+
 
 // Log initial configuration
 console.log("API Configuration:", {
