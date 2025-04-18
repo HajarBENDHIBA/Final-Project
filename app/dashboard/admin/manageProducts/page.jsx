@@ -19,10 +19,22 @@ export default function ManageProducts() {
   // Fetch products from the database
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/products`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       setProductList(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);
+      if (error.response?.status === 401) {
+        showAlert('Your session has expired. Please log in again.', 'error');
+        // Redirect to login
+        window.location.href = '/account';
+      } else {
+        showAlert('Failed to fetch products. Please try again.', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -61,6 +73,7 @@ export default function ManageProducts() {
     if (!editingProduct) return;
 
     try {
+      const token = localStorage.getItem('token');
       const productData = {
         name: newProduct.name.trim(),
         description: newProduct.description.trim(),
@@ -78,7 +91,12 @@ export default function ManageProducts() {
 
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/api/products/${editingProduct._id}`,
-        productData
+        productData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       );
       
       if (response.data) {
@@ -106,9 +124,24 @@ export default function ManageProducts() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        showAlert('Please select an image file.', 'error');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showAlert('Image size should be less than 5MB.', 'error');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setNewProduct({ ...newProduct, image: reader.result });
+      };
+      reader.onerror = () => {
+        showAlert('Error reading image file.', 'error');
       };
       reader.readAsDataURL(file);
     }
@@ -118,6 +151,7 @@ export default function ManageProducts() {
     e.preventDefault();
 
     try {
+      const token = localStorage.getItem('token');
       const productData = {
         name: newProduct.name.trim(),
         description: newProduct.description.trim(),
@@ -125,7 +159,20 @@ export default function ManageProducts() {
         image: newProduct.image
       };
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/products`, productData);
+      console.log('Adding product with data:', {
+        ...productData,
+        image: productData.image ? 'base64 image data' : 'no image'
+      });
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/products`,
+        productData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
       
       if (response.data) {
         setProductList([...productList, response.data]);

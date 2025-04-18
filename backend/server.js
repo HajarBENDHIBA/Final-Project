@@ -35,40 +35,7 @@ const allowedOrigins = [
 
 // CORS Configuration - Must be before other middleware
 app.use(
-  cors({
-    origin: function (origin, callback) {
-      console.log("Incoming request from origin:", origin);
-
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) {
-        console.log("No origin specified - allowing request");
-        return callback(null, true);
-      }
-
-      if (allowedOrigins.indexOf(origin) === -1) {
-        console.log("Origin not allowed:", origin);
-        const msg = `CORS Error: The origin ${origin} is not allowed`;
-        return callback(new Error(msg), false);
-      }
-
-      console.log("Origin allowed:", origin);
-      return callback(null, true);
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: [
-      "Origin",
-      "X-Requested-With",
-      "Content-Type",
-      "Accept",
-      "Authorization",
-      "X-CSRF-Token",
-    ],
-    exposedHeaders: ["Content-Length", "X-CSRF-Token"],
-    maxAge: 86400, // 24 hours
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  })
+  cors()
 );
 
 // Debug middleware to log all requests

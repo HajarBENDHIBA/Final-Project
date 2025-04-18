@@ -27,7 +27,7 @@ export const getProducts = async (req, res) => {
     });
 
     console.log("Attempting to fetch products from database...");
-    
+
     // Race between the actual query and the timeout
     const products = await Promise.race([
       Product.find()
@@ -67,7 +67,7 @@ export const getProducts = async (req, res) => {
       });
     }
 
-    res.status(500).json({ 
+    res.status(500).json({
       message: "An error occurred while fetching products",
       error: error.message,
       retryAfter: 60 // Suggest retry after 60 seconds for other errors
@@ -77,14 +77,17 @@ export const getProducts = async (req, res) => {
 
 // Add a new product
 export const addProduct = async (req, res) => {
-  console.log("Received product data:", req.body);
+  console.log("Received product data:", {
+    ...req.body,
+    image: req.body.image ? 'base64 image data' : 'no image'
+  });
 
   const { name, description, price, image } = req.body;
 
   try {
     // Validate all required fields
     if (!name || !description || !price || !image) {
-      console.log("Missing fields:", { name, description, price, image });
+      console.log("Missing fields:", { name, description, price, image: !!image });
       return res.status(400).json({
         message: "All fields are required",
         missingFields: {
@@ -107,8 +110,10 @@ export const addProduct = async (req, res) => {
 
     // Validate image is a valid base64 string
     if (!image.startsWith("data:image/")) {
+      console.log("Invalid image format received:", image.substring(0, 50) + "...");
       return res.status(400).json({
         message: "Invalid image format. Please upload a valid image file.",
+        receivedImage: image.substring(0, 50) + "..."
       });
     }
 
@@ -121,9 +126,16 @@ export const addProduct = async (req, res) => {
       id: Date.now(), // Add a unique ID
     });
 
-    console.log("Saving product:", newProduct);
+    console.log("Saving product:", {
+      ...newProduct.toObject(),
+      image: 'base64 image data'
+    });
+
     const savedProduct = await newProduct.save();
-    console.log("Product saved successfully:", savedProduct);
+    console.log("Product saved successfully:", {
+      ...savedProduct.toObject(),
+      image: 'base64 image data'
+    });
 
     // Invalidate cache when a new product is added
     productsCache = null;
@@ -131,13 +143,21 @@ export const addProduct = async (req, res) => {
 
     res.status(201).json(savedProduct);
   } catch (error) {
-    console.error("Detailed error saving product:", error);
+    console.error("Detailed error saving product:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
+
     // Send more detailed error information
     res.status(500).json({
       message: "Error adding product",
       error: error.message,
-      stack: error.stack,
-      name: error.name,
+      details: {
+        name: error.name,
+        code: error.code
+      }
     });
   }
 };
