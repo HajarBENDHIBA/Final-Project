@@ -37,14 +37,14 @@ router.post("/login", async (req, res) => {
         if (!isPasswordValid) {
             return res.status(400).json({ message: "Invalid password" });
         }
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "24h" });
 
         // Set cookie options
         const cookieOptions = {
             httpOnly: true,
             secure: true, // Always use secure in production
             sameSite: 'none', // Required for cross-origin cookies
-            maxAge: 60 * 60 * 1000, // 1 hour
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours
             path: '/',
         };
 

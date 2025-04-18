@@ -53,12 +53,13 @@ class ApiService {
       async (error) => {
         const originalRequest = error.config;
 
-        // Handle session expiration
-        if (error.response?.status === 401) {
-          if (!originalRequest._retry && this.hasAuthData() && !window.location.pathname.includes('/account')) {
-            // Clear auth data and redirect to login
+        // Handle session expiration or invalid token
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          // Clear auth data if we have it stored
+          if (this.hasAuthData()) {
             this.clearAuth();
-            if (typeof window !== 'undefined') {
+            // Only redirect to login if not already on the account page
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/account')) {
               window.location.href = '/account';
             }
           }

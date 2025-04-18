@@ -21,12 +21,25 @@ export default function Account() {
         const role = localStorage.getItem('role');
         
         if (token && role) {
-          if (role === 'admin') {
-            router.replace('/dashboard/admin');
-          } else {
-            router.replace('/dashboard/user');
+          // Try to verify the token
+          try {
+            const response = await apiService.checkAuth();
+            if (response) {
+              if (role === 'admin') {
+                router.replace('/dashboard/admin');
+              } else {
+                router.replace('/dashboard/user');
+              }
+              return;
+            }
+          } catch (error) {
+            console.error('Token verification failed:', error);
+            // Clear invalid/expired token
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userData');
           }
-          return;
         }
       } catch (error) {
         console.error('Auth check error:', error);
